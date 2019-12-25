@@ -224,7 +224,7 @@ if __name__ == '__main__':
         func=lambda args: plot_tsne(
             get_data_features(args, get_experiment_modalities_params(experiments_info[args.experiment], args.lwir_skip,
                                                                      args.lwir_max_len, args.vir_max_len)),
-            args.experiment,
+            args.experiment if args.experiment_path is None else args.experiment_path,
             args.excluded_modalities,
             args.PCA
         )
