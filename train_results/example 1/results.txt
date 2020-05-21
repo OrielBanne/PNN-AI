@@ -1,0 +1,119 @@
+training start time :    2020-05-08 20:00:03.881218
+########################################################################################################
+#                                                                                                      #
+#                                  PARAMETERS AND HYPER PARAMETERS                                     #
+#                                                                                                      #
+########################################################################################################
+
+from datetime import datetime, timedelta
+
+print('~~~~~~~~~~~~~IMPORT PARAMETERS~~~~~~~~~~~~~')
+
+
+# Default Parameters
+use_checkpoints=False #  checkpoints disable for training
+load_checkpoint=False #  load previous training checkpoint 
+experiment = 'Exp0'   #  Experiment name 
+experiment_path = f'/home/orielban/experiments/{experiment}/'
+load_features = True
+num_days = None      ### should be None
+split_cycle = 7
+start_date = None
+PCA = 0                ######################################################################
+lwir_max_len = None
+lwir_skip = 1
+vir_max_len = None
+color_max_len = None
+num_days = None
+num_clusters = 0      ### is this needed here or only for clustering??
+load_checkpoint = False
+use_checkpoints = True
+
+# define start and end dates of the experiment here, this should be a dictionary according to the experiment
+
+# Exp0
+start_date = datetime(2019, 6, 4)
+end_date   = datetime(2019, 7, 7)
+
+# Exp1
+# start_date = datetime(2019, 7, 28)
+# end_date   = datetime(2019, 8, 4)
+
+# Exp2
+# start_date = datetime(2019, 9, 20)
+# end_date   = datetime(2019, 10, 13)
+
+# training hyper-parameters       #     added again , '577nm'
+excluded_modalities=['noFilter', 'polar', 'polar_a'] # All of the modalities that you don't want to use
+train_ratio = 5/6     #  dataset train/test ratio
+batch_size=4          #  training batch size
+loss_delta=0.0        #  The minimum above the best loss that is allowed for the model to be  saved
+return_epochs=0       #  Epochs without improvement allowed (loss_delta included). Return to the best checkpoint otherwise. 0 to disable
+epochs = 50           #  number of epochs during train
+label_lr=1e-2         #  phenotype classifier learning rate
+plant_lr=1e-2         #  plant classifier LR used for transfer learning
+extractor_lr=1e-2     #  feature extractor LR
+domain_adapt_lr=1e-2  #  domain adaptation learning rate
+
+#  Clustering Parameters
+compare_clusters = True # Compare cluster evaluation results for used modalities
+num_clusters     = 6    # The number of clusters used in the evaluations, default is Exp number of phenotypes
+load_features    = False# action='store_true', default=False 
+cluster_tsne_results = '/home/orielban/PNN-AI/PNN-AI/tsne_results/' 
+# load features -- when true Loads the features from a file, else - computed from the extractor and saved in a csv file.
+
+# Clustering - TSNE
+plot_TSNE = True # Save a TSNE plot for used modalities
+PCA = 0  # default = 0, no PCA usage . If PCA > 0 -- features will be transformed by PCA with that number of components.
+--------------------------------------------------------------------------------------------
+	epoch 1: label loss:    1.800 plant loss:    3.706 accuracy:    0.038 
+	epoch 2: label loss:    1.755 plant loss:    3.704 accuracy:    0.054 
+	epoch 3: label loss:    1.664 plant loss:    3.645 accuracy:    0.079 
+	epoch 4: label loss:    1.538 plant loss:    3.529 accuracy:    0.080 
+	epoch 5: label loss:    1.467 plant loss:    3.441 accuracy:    0.090 
+	epoch 6: label loss:    1.426 plant loss:    3.366 accuracy:    0.101 
+	epoch 7: label loss:    1.338 plant loss:    3.300 accuracy:    0.104 
+	epoch 8: label loss:    1.182 plant loss:    3.277 accuracy:    0.127 
+	epoch 9: label loss:    1.234 plant loss:    3.226 accuracy:    0.113 
+	epoch 10: label loss:    1.135 plant loss:    3.109 accuracy:    0.131 
+	epoch 11: label loss:    1.124 plant loss:    3.088 accuracy:    0.126 
+	epoch 12: label loss:    1.043 plant loss:    2.999 accuracy:    0.127 
+	epoch 13: label loss:    1.044 plant loss:    3.037 accuracy:    0.141 
+	epoch 14: label loss:    1.006 plant loss:    2.961 accuracy:    0.145 
+	epoch 15: label loss:    0.896 plant loss:    2.884 accuracy:    0.152 
+	epoch 16: label loss:    0.974 plant loss:    3.043 accuracy:    0.147 
+	epoch 17: label loss:    0.855 plant loss:    2.930 accuracy:    0.162 
+	epoch 18: label loss:    0.814 plant loss:    2.965 accuracy:    0.163 
+	epoch 19: label loss:    0.853 plant loss:    2.863 accuracy:    0.155 
+	epoch 20: label loss:    0.985 plant loss:    2.946 accuracy:    0.146 
+	epoch 21: label loss:    0.918 plant loss:    2.811 accuracy:    0.153 
+	epoch 22: label loss:    0.876 plant loss:    2.837 accuracy:    0.146 
+	epoch 23: label loss:    0.878 plant loss:    3.080 accuracy:    0.162 
+	epoch 24: label loss:    0.787 plant loss:    2.811 accuracy:    0.172 
+	epoch 25: label loss:    0.827 plant loss:    2.887 accuracy:    0.167 
+	epoch 26: label loss:    0.813 plant loss:    3.074 accuracy:    0.170 
+	epoch 27: label loss:    0.676 plant loss:    2.857 accuracy:    0.171 
+	epoch 28: label loss:    1.049 plant loss:    3.045 accuracy:    0.147 
+	epoch 29: label loss:    0.879 plant loss:    3.029 accuracy:    0.169 
+	epoch 30: label loss:    0.824 plant loss:    3.187 accuracy:    0.162 
+	epoch 31: label loss:    0.652 plant loss:    3.196 accuracy:    0.183 
+	epoch 32: label loss:    0.853 plant loss:    2.833 accuracy:    0.171 
+	epoch 33: label loss:    0.651 plant loss:    3.194 accuracy:    0.183 
+	epoch 34: label loss:    0.510 plant loss:    2.938 accuracy:    0.198 
+	epoch 35: label loss:    0.811 plant loss:    3.376 accuracy:    0.185 
+	epoch 36: label loss:    0.926 plant loss:    3.332 accuracy:    0.152 
+	epoch 37: label loss:    0.792 plant loss:    3.528 accuracy:    0.179 
+	epoch 38: label loss:    0.593 plant loss:    3.130 accuracy:    0.191 
+	epoch 39: label loss:    0.595 plant loss:    3.467 accuracy:    0.190 
+	epoch 40: label loss:    0.791 plant loss:    3.499 accuracy:    0.188 
+	epoch 41: label loss:    0.588 plant loss:    3.215 accuracy:    0.189 
+	epoch 42: label loss:    0.656 plant loss:    3.022 accuracy:    0.196 
+	epoch 43: label loss:    0.736 plant loss:    3.165 accuracy:    0.174 
+	epoch 44: label loss:    0.613 plant loss:    3.175 accuracy:    0.196 
+	epoch 45: label loss:    0.553 plant loss:    3.274 accuracy:    0.193 
+	epoch 46: label loss:    0.547 plant loss:    2.995 accuracy:    0.198 
+	epoch 47: label loss:    0.619 plant loss:    3.545 accuracy:    0.191 
+	epoch 48: label loss:    0.542 plant loss:    3.392 accuracy:    0.199 
+	epoch 49: label loss:    0.526 plant loss:    3.628 accuracy:    0.196 
+	epoch 50: label loss:    0.480 plant loss:    3.424 accuracy:    0.204 
+Train_label_losses   :1.799931308201381 1.7549904772213527 1.6640441034521376 1.5379150773797716 1.4665935729231154 1.4263361837182726 1.3382649191788265 1.1816688516310283 1.2341172192777907 1.1352179152624948 1.1239992950643811 1.0430016411202294 1.0443588921001978 1.0055796661547252 0.8957779279776982 0.974267681155886 0.854762203352792 0.8139281472989491 0.852880255665098 0.9850483643157142 0.918102051956313 0.875606261406626 0.8783061968428748 0.7869976758956909 0.8268469682761601 0.8133143859250205 0.676017696091107 1.0492871071611132 0.8793726065329143 0.8240449053900583 0.6520657292434148 0.8531208332095828 0.650818710241999 0.5100759306124278 0.8105123153754643 0.9263514723096575 0.7923001225505556 0.592816772205489 0.5948179108755929 0.7908464248691286 0.5878990437303271 0.656112842474665 0.7355011492967606 0.6126585002456393 0.5528150860752378 0.5473943995577949 0.6192274566207613 0.5416403821536473 0.5263910689524242 0.4804624089172908Train_plant_losses   :3.7062393597194125 3.7040451526641847 3.645050845827375 3.5291018009185793 3.441161298751831 3.366170174734933 3.299945705277579 3.2771209035600934 3.2260362897600445 3.1092643976211547 3.0880117109843663 2.9991497380392893 3.0366552897862027 2.961338632447379 2.8844778265271867 3.0428753103528705 2.930161574908665 2.9651949507849555 2.862804789202554 2.9462058544158936 2.810907583577292 2.836945608683995 3.0796741349356513 2.8111801726477488 2.8873791507312228 3.0743815847805567 2.856638261250087 3.0448013356753756 3.028807382924216 3.186707535811833 3.19606784922736 2.8334554178374156 3.193506108011518 2.9380319799695696 3.3763904673712593 3.331826203210013 3.52801844051906 3.1299826775278365 3.4669500878879003 3.498946613924844 3.2151369741984777 3.0222178714615957 3.1647892934935435 3.174531931536538 3.2738330824034554 2.994801982811519 3.5452709657805306 3.3922386510031566 3.6276151214327133 3.4236334034374782Train_accuracy_prog  :

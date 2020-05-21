@@ -1,0 +1,471 @@
+~~~~~~~~~~~~~IMPORT PARAMETERS~~~~~~~~~~~~~
+importing modalities
+ all modalilties are :  ('577nm', 'lwir', 'polar', 'polar_a', 'color', '732nm', '692nm', 'noFilter', '970nm')
+going to main 
+------------------------------------------------------------------------------------
+ inside main    
+------------------------------------------------------------------------------------
+Opening the results file to start writing the parameters to it
+here is the parameters file as i have read it :
+-------------------------------------------------------------------------------------
+########################################################################################################
+#                                                                                                      #
+#                                  PARAMETERS AND HYPER PARAMETERS                                     #
+#                                                                                                      #
+########################################################################################################
+
+from datetime import datetime, timedelta
+
+print('~~~~~~~~~~~~~IMPORT PARAMETERS~~~~~~~~~~~~~')
+
+
+# Default Parameters
+use_checkpoints=False #  checkpoints disable for training
+load_checkpoint=False #  load previous training checkpoint 
+experiment = 'Exp0'   #  Experiment name 
+experiment_path = f'/home/orielban/experiments/{experiment}/'
+load_features = True
+num_days = None      ### should be None
+split_cycle = 7
+start_date = None
+PCA = 0                ######################################################################
+lwir_max_len = None
+lwir_skip = 1
+vir_max_len = None
+color_max_len = None
+num_days = None
+num_clusters = 0      ### is this needed here or only for clustering??
+load_checkpoint = False
+use_checkpoints = True
+
+# define start and end dates of the experiment here, this should be a dictionary according to the experiment
+
+# Exp0
+start_date = datetime(2019, 6, 4)
+end_date   = datetime(2019, 7, 7)
+
+# Exp1
+# start_date = datetime(2019, 7, 28)
+# end_date   = datetime(2019, 8, 4)
+
+# Exp2
+# start_date = datetime(2019, 9, 20)
+# end_date   = datetime(2019, 10, 13)
+
+# training hyper-parameters       #     added again , '577nm'
+excluded_modalities=['noFilter', 'polar', 'polar_a'] # All of the modalities that you don't want to use
+train_ratio = 5/6     #  dataset train/test ratio
+batch_size=4          #  training batch size
+loss_delta=0.0        #  The minimum above the best loss that is allowed for the model to be  saved
+return_epochs=0       #  Epochs without improvement allowed (loss_delta included). Return to the best checkpoint otherwise. 0 to disable
+epochs = 50           #  number of epochs during train
+label_lr=1e-2         #  phenotype classifier learning rate
+plant_lr=1e-2         #  plant classifier LR used for transfer learning
+extractor_lr=1e-2     #  feature extractor LR
+domain_adapt_lr=1e-2  #  domain adaptation learning rate
+
+#  Clustering Parameters
+compare_clusters = True # Compare cluster evaluation results for used modalities
+num_clusters     = 6    # The number of clusters used in the evaluations, default is Exp number of phenotypes
+load_features    = False# action='store_true', default=False 
+cluster_tsne_results = '/home/orielban/PNN-AI/PNN-AI/tsne_results/' 
+# load features -- when true Loads the features from a file, else - computed from the extractor and saved in a csv file.
+
+# Clustering - TSNE
+plot_TSNE = True # Save a TSNE plot for used modalities
+PCA = 0  # default = 0, no PCA usage . If PCA > 0 -- features will be transformed by PCA with that number of components.
+
+-------------------------------------------------------------------------------------
+end of parameters closing file 
+writing the parameters to results file
+
+ ****  dataset preparations *****
+__________________________________________________________________________________
+creating self.modalities
+self.num_plants is    : 48
+ **** Finished dataset preparations *****
+------------------------------------------------------------------------------------
+len train_loader =  70
+------------------------------------------------------------------------------------
+used_modalities.keys()  =  dict_keys(['lwir', '577nm', '692nm', '732nm', '970nm'])
+ @@@@ define self.inception                              @@@@@   2020-05-08 20:00:05.102318
+ @@@@   end inception for loop                           @@@@@   2020-05-08 20:00:09.383902
+ **** Running        train loop                          *****   2020-05-08 20:00:16.530268
+epoch 1: 2020-05-08 20:00:16.530320
+	batch 24. label loss:    7.241 plant loss:   14.771 accuracy:    0.115
+	batch 48. label loss:   14.401 plant loss:   29.593 accuracy:    0.281
+	batch 70. label loss:   22.908 plant loss:   47.170 accuracy:    0.477
+	epoch 1: 70. label loss:    1.800 plant loss:    3.706 accuracy:    0.038
+Epoch Time [hh:mm:sec] = 0:04:11.660799
+Model Test: 	 Test label accuracy    0.125   Test label loss     1.817
+		saving model with new best loss 1.816885028566633
+epoch 2: 2020-05-08 20:05:31.239046
+	batch 24. label loss:    7.020 plant loss:   14.742 accuracy:    0.229
+	batch 48. label loss:   14.068 plant loss:   29.596 accuracy:    0.427
+	batch 70. label loss:   22.336 plant loss:   47.142 accuracy:    0.693
+	epoch 2: 70. label loss:    1.755 plant loss:    3.704 accuracy:    0.054
+Epoch Time [hh:mm:sec] = 0:04:09.788882
+Model Test: 	 Test label accuracy    0.125   Test label loss     1.816
+		saving model with new best loss 1.8156959840229578
+epoch 3: 2020-05-08 20:10:42.561585
+	batch 24. label loss:    6.557 plant loss:   14.469 accuracy:    0.333
+	batch 48. label loss:   13.387 plant loss:   29.204 accuracy:    0.646
+	batch 70. label loss:   21.179 plant loss:   46.392 accuracy:    1.000
+	epoch 3: 70. label loss:    1.664 plant loss:    3.645 accuracy:    0.079
+Epoch Time [hh:mm:sec] = 0:04:08.799493
+Model Test: 	 Test label accuracy    0.196   Test label loss     1.686
+		saving model with new best loss 1.6860495209693909
+epoch 4: 2020-05-08 20:15:54.678116
+	batch 24. label loss:    6.335 plant loss:   14.094 accuracy:    0.292
+	batch 48. label loss:   12.644 plant loss:   28.221 accuracy:    0.594
+	batch 70. label loss:   19.573 plant loss:   44.916 accuracy:    1.023
+	epoch 4: 70. label loss:    1.538 plant loss:    3.529 accuracy:    0.080
+Epoch Time [hh:mm:sec] = 0:04:09.773206
+Model Test: 	 Test label accuracy    0.250   Test label loss     1.543
+		saving model with new best loss 1.5427225146974837
+epoch 5: 2020-05-08 20:21:07.390688
+	batch 24. label loss:    6.174 plant loss:   13.855 accuracy:    0.354
+	batch 48. label loss:   11.889 plant loss:   27.683 accuracy:    0.708
+	batch 70. label loss:   18.666 plant loss:   43.797 accuracy:    1.148
+	epoch 5: 70. label loss:    1.467 plant loss:    3.441 accuracy:    0.090
+Epoch Time [hh:mm:sec] = 0:04:08.648461
+Model Test: 	 Test label accuracy    0.321   Test label loss     1.515
+		saving model with new best loss 1.515118956565857
+epoch 6: 2020-05-08 20:26:18.031936
+	batch 24. label loss:    5.633 plant loss:   13.406 accuracy:    0.406
+	batch 48. label loss:   11.459 plant loss:   26.819 accuracy:    0.792
+	batch 70. label loss:   18.153 plant loss:   42.842 accuracy:    1.284
+	epoch 6: 70. label loss:    1.426 plant loss:    3.366 accuracy:    0.101
+Epoch Time [hh:mm:sec] = 0:04:10.311233
+Model Test: 	 Test label accuracy    0.304   Test label loss     1.493
+		saving model with new best loss 1.4928431170327323
+epoch 7: 2020-05-08 20:31:30.031259
+	batch 24. label loss:    5.386 plant loss:   13.203 accuracy:    0.406
+	batch 48. label loss:   10.903 plant loss:   26.327 accuracy:    0.812
+	batch 70. label loss:   17.032 plant loss:   41.999 accuracy:    1.330
+	epoch 7: 70. label loss:    1.338 plant loss:    3.300 accuracy:    0.104
+Epoch Time [hh:mm:sec] = 0:04:11.325504
+Model Test: 	 Test label accuracy    0.464   Test label loss     1.684
+epoch 8: 2020-05-08 20:36:42.489241
+	batch 24. label loss:    4.599 plant loss:   12.814 accuracy:    0.458
+	batch 48. label loss:    9.379 plant loss:   25.966 accuracy:    0.990
+	batch 70. label loss:   15.039 plant loss:   41.709 accuracy:    1.614
+	epoch 8: 70. label loss:    1.182 plant loss:    3.277 accuracy:    0.127
+Epoch Time [hh:mm:sec] = 0:04:08.164363
+Model Test: 	 Test label accuracy    0.196   Test label loss     1.864
+epoch 9: 2020-05-08 20:41:53.199213
+	batch 24. label loss:    5.626 plant loss:   13.184 accuracy:    0.458
+	batch 48. label loss:   10.547 plant loss:   25.958 accuracy:    0.875
+	batch 70. label loss:   15.707 plant loss:   41.059 accuracy:    1.443
+	epoch 9: 70. label loss:    1.234 plant loss:    3.226 accuracy:    0.113
+Epoch Time [hh:mm:sec] = 0:04:09.928945
+Model Test: 	 Test label accuracy    0.321   Test label loss     1.760
+epoch 10: 2020-05-08 20:47:04.232774
+	batch 24. label loss:    4.474 plant loss:   12.330 accuracy:    0.604
+	batch 48. label loss:    9.148 plant loss:   24.807 accuracy:    1.062
+	batch 70. label loss:   14.448 plant loss:   39.572 accuracy:    1.670
+	epoch 10: 70. label loss:    1.135 plant loss:    3.109 accuracy:    0.131
+Epoch Time [hh:mm:sec] = 0:04:10.550687
+Model Test: 	 Test label accuracy    0.518   Test label loss     1.214
+		saving model with new best loss 1.2141494240079607
+epoch 11: 2020-05-08 20:52:16.385194
+	batch 24. label loss:    4.252 plant loss:   12.284 accuracy:    0.490
+	batch 48. label loss:    8.893 plant loss:   24.677 accuracy:    1.000
+	batch 70. label loss:   14.305 plant loss:   39.302 accuracy:    1.602
+	epoch 11: 70. label loss:    1.124 plant loss:    3.088 accuracy:    0.126
+Epoch Time [hh:mm:sec] = 0:04:10.728441
+Model Test: 	 Test label accuracy    0.393   Test label loss     1.388
+epoch 12: 2020-05-08 20:57:28.199873
+	batch 24. label loss:    3.986 plant loss:   11.760 accuracy:    0.510
+	batch 48. label loss:    8.375 plant loss:   23.644 accuracy:    1.021
+	batch 70. label loss:   13.275 plant loss:   38.171 accuracy:    1.614
+	epoch 12: 70. label loss:    1.043 plant loss:    2.999 accuracy:    0.127
+Epoch Time [hh:mm:sec] = 0:04:10.691795
+Model Test: 	 Test label accuracy    0.571   Test label loss     1.122
+		saving model with new best loss 1.121777981519699
+epoch 13: 2020-05-08 21:02:40.370352
+	batch 24. label loss:    4.051 plant loss:   11.847 accuracy:    0.656
+	batch 48. label loss:    8.196 plant loss:   24.087 accuracy:    1.198
+	batch 70. label loss:   13.292 plant loss:   38.648 accuracy:    1.795
+	epoch 13: 70. label loss:    1.044 plant loss:    3.037 accuracy:    0.141
+Epoch Time [hh:mm:sec] = 0:04:10.582669
+Model Test: 	 Test label accuracy    0.446   Test label loss     1.335
+epoch 14: 2020-05-08 21:07:52.344834
+	batch 24. label loss:    4.001 plant loss:   11.842 accuracy:    0.583
+	batch 48. label loss:    7.967 plant loss:   23.905 accuracy:    1.135
+	batch 70. label loss:   12.798 plant loss:   37.690 accuracy:    1.841
+	epoch 14: 70. label loss:    1.006 plant loss:    2.961 accuracy:    0.145
+Epoch Time [hh:mm:sec] = 0:04:10.152936
+Model Test: 	 Test label accuracy    0.375   Test label loss     1.607
+epoch 15: 2020-05-08 21:13:03.943320
+	batch 24. label loss:    3.724 plant loss:   11.621 accuracy:    0.562
+	batch 48. label loss:    7.540 plant loss:   22.990 accuracy:    1.156
+	batch 70. label loss:   11.401 plant loss:   36.712 accuracy:    1.932
+	epoch 15: 70. label loss:    0.896 plant loss:    2.884 accuracy:    0.152
+Epoch Time [hh:mm:sec] = 0:04:09.515958
+Model Test: 	 Test label accuracy    0.464   Test label loss     1.379
+epoch 16: 2020-05-08 21:18:14.253111
+	batch 24. label loss:    3.593 plant loss:   11.752 accuracy:    0.688
+	batch 48. label loss:    7.757 plant loss:   23.754 accuracy:    1.250
+	batch 70. label loss:   12.400 plant loss:   38.728 accuracy:    1.875
+	epoch 16: 70. label loss:    0.974 plant loss:    3.043 accuracy:    0.147
+Epoch Time [hh:mm:sec] = 0:04:11.156488
+Model Test: 	 Test label accuracy    0.446   Test label loss     1.289
+epoch 17: 2020-05-08 21:23:26.263446
+	batch 24. label loss:    3.907 plant loss:   12.157 accuracy:    0.573
+	batch 48. label loss:    7.402 plant loss:   23.620 accuracy:    1.240
+	batch 70. label loss:   10.879 plant loss:   37.293 accuracy:    2.068
+	epoch 17: 70. label loss:    0.855 plant loss:    2.930 accuracy:    0.162
+Epoch Time [hh:mm:sec] = 0:04:10.907916
+Model Test: 	 Test label accuracy    0.446   Test label loss     1.220
+epoch 18: 2020-05-08 21:28:39.089696
+	batch 24. label loss:    2.430 plant loss:   10.588 accuracy:    0.740
+	batch 48. label loss:    6.222 plant loss:   23.817 accuracy:    1.323
+	batch 70. label loss:   10.359 plant loss:   37.739 accuracy:    2.080
+	epoch 18: 70. label loss:    0.814 plant loss:    2.965 accuracy:    0.163
+Epoch Time [hh:mm:sec] = 0:04:09.921610
+Model Test: 	 Test label accuracy    0.571   Test label loss     1.063
+		saving model with new best loss 1.0628385032926286
+epoch 19: 2020-05-08 21:33:50.770730
+	batch 24. label loss:    3.806 plant loss:   11.542 accuracy:    0.615
+	batch 48. label loss:    6.488 plant loss:   22.890 accuracy:    1.292
+	batch 70. label loss:   10.855 plant loss:   36.436 accuracy:    1.977
+	epoch 19: 70. label loss:    0.853 plant loss:    2.863 accuracy:    0.155
+Epoch Time [hh:mm:sec] = 0:04:10.511525
+Model Test: 	 Test label accuracy    0.446   Test label loss     1.341
+epoch 20: 2020-05-08 21:39:02.489380
+	batch 24. label loss:    3.389 plant loss:   11.185 accuracy:    0.594
+	batch 48. label loss:    7.763 plant loss:   23.918 accuracy:    1.135
+	batch 70. label loss:   12.537 plant loss:   37.497 accuracy:    1.864
+	epoch 20: 70. label loss:    0.985 plant loss:    2.946 accuracy:    0.146
+Epoch Time [hh:mm:sec] = 0:04:11.079279
+Model Test: 	 Test label accuracy    0.518   Test label loss     1.118
+epoch 21: 2020-05-08 21:44:15.141878
+	batch 24. label loss:    3.091 plant loss:   10.470 accuracy:    0.688
+	batch 48. label loss:    7.211 plant loss:   21.849 accuracy:    1.219
+	batch 70. label loss:   11.685 plant loss:   35.775 accuracy:    1.943
+	epoch 21: 70. label loss:    0.918 plant loss:    2.811 accuracy:    0.153
+Epoch Time [hh:mm:sec] = 0:04:11.290152
+Model Test: 	 Test label accuracy    0.589   Test label loss     1.056
+		saving model with new best loss 1.0555356357778822
+epoch 22: 2020-05-08 21:49:29.122252
+	batch 24. label loss:    3.147 plant loss:   10.840 accuracy:    0.646
+	batch 48. label loss:    7.084 plant loss:   22.497 accuracy:    1.167
+	batch 70. label loss:   11.144 plant loss:   36.107 accuracy:    1.852
+	epoch 22: 70. label loss:    0.876 plant loss:    2.837 accuracy:    0.146
+Epoch Time [hh:mm:sec] = 0:04:13.366913
+Model Test: 	 Test label accuracy    0.500   Test label loss     1.029
+		saving model with new best loss 1.0288006897483553
+epoch 23: 2020-05-08 21:54:45.130583
+	batch 24. label loss:    3.112 plant loss:   11.116 accuracy:    0.698
+	batch 48. label loss:    6.316 plant loss:   24.725 accuracy:    1.385
+	batch 70. label loss:   11.178 plant loss:   39.196 accuracy:    2.068
+	epoch 23: 70. label loss:    0.878 plant loss:    3.080 accuracy:    0.162
+Epoch Time [hh:mm:sec] = 0:04:14.406722
+Model Test: 	 Test label accuracy    0.464   Test label loss     1.252
+epoch 24: 2020-05-08 22:00:01.766093
+	batch 24. label loss:    2.860 plant loss:   10.728 accuracy:    0.729
+	batch 48. label loss:    6.106 plant loss:   22.358 accuracy:    1.417
+	batch 70. label loss:   10.016 plant loss:   35.779 accuracy:    2.193
+	epoch 24: 70. label loss:    0.787 plant loss:    2.811 accuracy:    0.172
+Epoch Time [hh:mm:sec] = 0:04:14.799571
+Model Test: 	 Test label accuracy    0.500   Test label loss     1.044
+epoch 25: 2020-05-08 22:05:18.938096
+	batch 24. label loss:    2.324 plant loss:   11.169 accuracy:    0.760
+	batch 48. label loss:    5.821 plant loss:   22.692 accuracy:    1.385
+	batch 70. label loss:   10.524 plant loss:   36.748 accuracy:    2.125
+	epoch 25: 70. label loss:    0.827 plant loss:    2.887 accuracy:    0.167
+Epoch Time [hh:mm:sec] = 0:04:13.969006
+Model Test: 	 Test label accuracy    0.500   Test label loss     1.146
+epoch 26: 2020-05-08 22:10:34.621147
+	batch 24. label loss:    3.529 plant loss:   11.670 accuracy:    0.698
+	batch 48. label loss:    6.966 plant loss:   24.187 accuracy:    1.365
+	batch 70. label loss:   10.351 plant loss:   39.128 accuracy:    2.159
+	epoch 26: 70. label loss:    0.813 plant loss:    3.074 accuracy:    0.170
+Epoch Time [hh:mm:sec] = 0:04:15.005844
+Model Test: 	 Test label accuracy    0.571   Test label loss     1.251
+epoch 27: 2020-05-08 22:15:51.807894
+	batch 24. label loss:    3.309 plant loss:   12.018 accuracy:    0.625
+	batch 48. label loss:    5.577 plant loss:   23.632 accuracy:    1.333
+	batch 70. label loss:    8.604 plant loss:   36.357 accuracy:    2.170
+	epoch 27: 70. label loss:    0.676 plant loss:    2.857 accuracy:    0.171
+Epoch Time [hh:mm:sec] = 0:04:13.400169
+Model Test: 	 Test label accuracy    0.536   Test label loss     1.199
+epoch 28: 2020-05-08 22:21:06.965582
+	batch 24. label loss:    4.360 plant loss:   13.465 accuracy:    0.583
+	batch 48. label loss:    7.867 plant loss:   24.098 accuracy:    1.188
+	batch 70. label loss:   13.355 plant loss:   38.752 accuracy:    1.875
+	epoch 28: 70. label loss:    1.049 plant loss:    3.045 accuracy:    0.147
+Epoch Time [hh:mm:sec] = 0:04:14.096376
+Model Test: 	 Test label accuracy    0.411   Test label loss     1.479
+epoch 29: 2020-05-08 22:26:23.323881
+	batch 24. label loss:    3.064 plant loss:   11.438 accuracy:    0.729
+	batch 48. label loss:    6.531 plant loss:   23.927 accuracy:    1.417
+	batch 70. label loss:   11.192 plant loss:   38.548 accuracy:    2.148
+	epoch 29: 70. label loss:    0.879 plant loss:    3.029 accuracy:    0.169
+Epoch Time [hh:mm:sec] = 0:04:13.891211
+Model Test: 	 Test label accuracy    0.464   Test label loss     1.308
+epoch 30: 2020-05-08 22:31:39.221040
+	batch 24. label loss:    3.116 plant loss:   11.062 accuracy:    0.656
+	batch 48. label loss:    6.611 plant loss:   23.176 accuracy:    1.292
+	batch 70. label loss:   10.488 plant loss:   40.558 accuracy:    2.068
+	epoch 30: 70. label loss:    0.824 plant loss:    3.187 accuracy:    0.162
+Epoch Time [hh:mm:sec] = 0:04:13.622772
+Model Test: 	 Test label accuracy    0.554   Test label loss     1.140
+epoch 31: 2020-05-08 22:36:54.627102
+	batch 24. label loss:    2.057 plant loss:   11.642 accuracy:    0.760
+	batch 48. label loss:    5.166 plant loss:   26.983 accuracy:    1.479
+	batch 70. label loss:    8.299 plant loss:   40.677 accuracy:    2.330
+	epoch 31: 70. label loss:    0.652 plant loss:    3.196 accuracy:    0.183
+Epoch Time [hh:mm:sec] = 0:04:15.190629
+Model Test: 	 Test label accuracy    0.304   Test label loss     1.632
+epoch 32: 2020-05-08 22:42:12.060640
+	batch 24. label loss:    3.654 plant loss:   11.256 accuracy:    0.688
+	batch 48. label loss:    6.840 plant loss:   23.001 accuracy:    1.406
+	batch 70. label loss:   10.858 plant loss:   36.062 accuracy:    2.182
+	epoch 32: 70. label loss:    0.853 plant loss:    2.833 accuracy:    0.171
+Epoch Time [hh:mm:sec] = 0:04:15.235461
+Model Test: 	 Test label accuracy    0.482   Test label loss     1.226
+epoch 33: 2020-05-08 22:47:29.450144
+	batch 24. label loss:    1.952 plant loss:   10.332 accuracy:    0.812
+	batch 48. label loss:    4.852 plant loss:   22.986 accuracy:    1.542
+	batch 70. label loss:    8.283 plant loss:   40.645 accuracy:    2.330
+	epoch 33: 70. label loss:    0.651 plant loss:    3.194 accuracy:    0.183
+Epoch Time [hh:mm:sec] = 0:04:14.806600
+Model Test: 	 Test label accuracy    0.518   Test label loss     1.169
+epoch 34: 2020-05-08 22:52:46.478065
+	batch 24. label loss:    1.713 plant loss:   11.695 accuracy:    0.844
+	batch 48. label loss:    4.104 plant loss:   23.241 accuracy:    1.583
+	batch 70. label loss:    6.492 plant loss:   37.393 accuracy:    2.523
+	epoch 34: 70. label loss:    0.510 plant loss:    2.938 accuracy:    0.198
+Epoch Time [hh:mm:sec] = 0:04:15.831680
+Model Test: 	 Test label accuracy    0.482   Test label loss     1.248
+epoch 35: 2020-05-08 22:58:04.136388
+	batch 24. label loss:    2.381 plant loss:   12.611 accuracy:    0.771
+	batch 48. label loss:    4.237 plant loss:   25.020 accuracy:    1.604
+	batch 70. label loss:   10.316 plant loss:   42.972 accuracy:    2.352
+	epoch 35: 70. label loss:    0.811 plant loss:    3.376 accuracy:    0.185
+Epoch Time [hh:mm:sec] = 0:04:13.535406
+Model Test: 	 Test label accuracy    0.393   Test label loss     1.350
+epoch 36: 2020-05-08 23:03:19.662666
+	batch 24. label loss:    3.803 plant loss:   12.514 accuracy:    0.583
+	batch 48. label loss:    7.515 plant loss:   24.803 accuracy:    1.146
+	batch 70. label loss:   11.790 plant loss:   42.405 accuracy:    1.932
+	epoch 36: 70. label loss:    0.926 plant loss:    3.332 accuracy:    0.152
+Epoch Time [hh:mm:sec] = 0:04:10.082158
+Model Test: 	 Test label accuracy    0.393   Test label loss     1.507
+epoch 37: 2020-05-08 23:08:30.772565
+	batch 24. label loss:    3.145 plant loss:   12.919 accuracy:    0.729
+	batch 48. label loss:    6.821 plant loss:   29.278 accuracy:    1.385
+	batch 70. label loss:   10.084 plant loss:   44.902 accuracy:    2.284
+	epoch 37: 70. label loss:    0.792 plant loss:    3.528 accuracy:    0.179
+Epoch Time [hh:mm:sec] = 0:04:09.926132
+Model Test: 	 Test label accuracy    0.518   Test label loss     1.491
+epoch 38: 2020-05-08 23:13:41.994702
+	batch 24. label loss:    2.926 plant loss:   11.798 accuracy:    0.729
+	batch 48. label loss:    4.826 plant loss:   23.467 accuracy:    1.542
+	batch 70. label loss:    7.545 plant loss:   39.836 accuracy:    2.432
+	epoch 38: 70. label loss:    0.593 plant loss:    3.130 accuracy:    0.191
+Epoch Time [hh:mm:sec] = 0:04:10.173032
+Model Test: 	 Test label accuracy    0.429   Test label loss     1.788
+epoch 39: 2020-05-08 23:18:53.401460
+	batch 24. label loss:    2.948 plant loss:   11.836 accuracy:    0.698
+	batch 48. label loss:    5.391 plant loss:   23.585 accuracy:    1.458
+	batch 70. label loss:    7.570 plant loss:   44.125 accuracy:    2.420
+	epoch 39: 70. label loss:    0.595 plant loss:    3.467 accuracy:    0.190
+Epoch Time [hh:mm:sec] = 0:04:10.134403
+Model Test: 	 Test label accuracy    0.536   Test label loss     1.312
+epoch 40: 2020-05-08 23:24:05.454031
+	batch 24. label loss:    4.206 plant loss:   17.176 accuracy:    0.781
+	batch 48. label loss:    6.612 plant loss:   28.831 accuracy:    1.521
+	batch 70. label loss:   10.065 plant loss:   44.532 accuracy:    2.386
+	epoch 40: 70. label loss:    0.791 plant loss:    3.499 accuracy:    0.188
+Epoch Time [hh:mm:sec] = 0:04:09.674485
+Model Test: 	 Test label accuracy    0.554   Test label loss     1.143
+epoch 41: 2020-05-08 23:29:16.787342
+	batch 24. label loss:    2.361 plant loss:   11.862 accuracy:    0.802
+	batch 48. label loss:    4.671 plant loss:   26.178 accuracy:    1.562
+	batch 70. label loss:    7.482 plant loss:   40.920 accuracy:    2.409
+	epoch 41: 70. label loss:    0.588 plant loss:    3.215 accuracy:    0.189
+Epoch Time [hh:mm:sec] = 0:04:09.422336
+Model Test: 	 Test label accuracy    0.554   Test label loss     1.326
+epoch 42: 2020-05-08 23:34:26.990142
+	batch 24. label loss:    2.193 plant loss:   11.336 accuracy:    0.823
+	batch 48. label loss:    5.431 plant loss:   24.906 accuracy:    1.552
+	batch 70. label loss:    8.351 plant loss:   38.465 accuracy:    2.500
+	epoch 42: 70. label loss:    0.656 plant loss:    3.022 accuracy:    0.196
+Epoch Time [hh:mm:sec] = 0:04:08.842777
+Model Test: 	 Test label accuracy    0.446   Test label loss     1.457
+epoch 43: 2020-05-08 23:39:37.914350
+	batch 24. label loss:    3.651 plant loss:   12.521 accuracy:    0.656
+	batch 48. label loss:    6.231 plant loss:   25.193 accuracy:    1.333
+	batch 70. label loss:    9.361 plant loss:   40.279 accuracy:    2.216
+	epoch 43: 70. label loss:    0.736 plant loss:    3.165 accuracy:    0.174
+Epoch Time [hh:mm:sec] = 0:04:10.426206
+Model Test: 	 Test label accuracy    0.393   Test label loss     1.972
+epoch 44: 2020-05-08 23:44:49.406177
+	batch 24. label loss:    2.806 plant loss:   13.954 accuracy:    0.792
+	batch 48. label loss:    4.847 plant loss:   26.927 accuracy:    1.583
+	batch 70. label loss:    7.797 plant loss:   40.403 accuracy:    2.500
+	epoch 44: 70. label loss:    0.613 plant loss:    3.175 accuracy:    0.196
+Epoch Time [hh:mm:sec] = 0:04:10.179296
+Model Test: 	 Test label accuracy    0.464   Test label loss     1.280
+epoch 45: 2020-05-08 23:50:00.772993
+	batch 24. label loss:    2.134 plant loss:   11.658 accuracy:    0.760
+	batch 48. label loss:    4.840 plant loss:   27.454 accuracy:    1.479
+	batch 70. label loss:    7.036 plant loss:   41.667 accuracy:    2.455
+	epoch 45: 70. label loss:    0.553 plant loss:    3.274 accuracy:    0.193
+Epoch Time [hh:mm:sec] = 0:04:09.232461
+Model Test: 	 Test label accuracy    0.446   Test label loss     1.685
+epoch 46: 2020-05-08 23:55:11.215293
+	batch 24. label loss:    1.846 plant loss:   12.410 accuracy:    0.823
+	batch 48. label loss:    4.170 plant loss:   23.867 accuracy:    1.604
+	batch 70. label loss:    6.967 plant loss:   38.116 accuracy:    2.523
+	epoch 46: 70. label loss:    0.547 plant loss:    2.995 accuracy:    0.198
+Epoch Time [hh:mm:sec] = 0:04:10.668852
+Model Test: 	 Test label accuracy    0.589   Test label loss     1.316
+epoch 47: 2020-05-09 00:00:22.651378
+	batch 24. label loss:    1.873 plant loss:   16.632 accuracy:    0.771
+	batch 48. label loss:    4.789 plant loss:   28.023 accuracy:    1.521
+	batch 70. label loss:    7.881 plant loss:   45.122 accuracy:    2.432
+	epoch 47: 70. label loss:    0.619 plant loss:    3.545 accuracy:    0.191
+Epoch Time [hh:mm:sec] = 0:04:08.692681
+Model Test: 	 Test label accuracy    0.482   Test label loss     1.661
+epoch 48: 2020-05-09 00:05:33.366403
+	batch 24. label loss:    3.449 plant loss:   16.248 accuracy:    0.677
+	batch 48. label loss:    5.060 plant loss:   28.325 accuracy:    1.531
+	batch 70. label loss:    6.894 plant loss:   43.174 accuracy:    2.534
+	epoch 48: 70. label loss:    0.542 plant loss:    3.392 accuracy:    0.199
+Epoch Time [hh:mm:sec] = 0:04:10.269888
+Model Test: 	 Test label accuracy    0.464   Test label loss     1.533
+epoch 49: 2020-05-09 00:10:45.141198
+	batch 24. label loss:    1.130 plant loss:   16.062 accuracy:    0.865
+	batch 48. label loss:    4.187 plant loss:   31.921 accuracy:    1.542
+	batch 70. label loss:    6.700 plant loss:   46.170 accuracy:    2.489
+	epoch 49: 70. label loss:    0.526 plant loss:    3.628 accuracy:    0.196
+Epoch Time [hh:mm:sec] = 0:04:09.553741
+Model Test: 	 Test label accuracy    0.589   Test label loss     1.144
+epoch 50: 2020-05-09 00:15:55.273205
+	batch 24. label loss:    1.847 plant loss:   13.478 accuracy:    0.833
+	batch 48. label loss:    4.077 plant loss:   27.922 accuracy:    1.635
+	batch 70. label loss:    6.115 plant loss:   43.574 accuracy:    2.591
+	epoch 50: 70. label loss:    0.480 plant loss:    3.424 accuracy:    0.204
+Epoch Time [hh:mm:sec] = 0:04:12.002003
+Traceback (most recent call last):
+  File "/home/orielban/miniconda3/envs/OrielEnv/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/home/orielban/miniconda3/envs/OrielEnv/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/orielban/PNN-AI/PNN-AI/train/train_loop.py", line 358, in <module>
+    main()
+  File "/home/orielban/PNN-AI/PNN-AI/train/train_loop.py", line 347, in main
+    train_loop(test_config)
+  File "/home/orielban/PNN-AI/PNN-AI/train/train_loop.py", line 230, in train_loop
+    f.write(" ".join(map(str,Train_accuracy_prog.item())))
+AttributeError: 'list' object has no attribute 'item'
+Model Test: 	 Test label accuracy    0.536   Test label loss     1.219
+Train_label_losses   : [1.799931308201381, 1.7549904772213527, 1.6640441034521376, 1.5379150773797716, 1.4665935729231154, 1.4263361837182726, 1.3382649191788265, 1.1816688516310283, 1.2341172192777907, 1.1352179152624948, 1.1239992950643811, 1.0430016411202294, 1.0443588921001978, 1.0055796661547252, 0.8957779279776982, 0.974267681155886, 0.854762203352792, 0.8139281472989491, 0.852880255665098, 0.9850483643157142, 0.918102051956313, 0.875606261406626, 0.8783061968428748, 0.7869976758956909, 0.8268469682761601, 0.8133143859250205, 0.676017696091107, 1.0492871071611132, 0.8793726065329143, 0.8240449053900583, 0.6520657292434148, 0.8531208332095828, 0.650818710241999, 0.5100759306124278, 0.8105123153754643, 0.9263514723096575, 0.7923001225505556, 0.592816772205489, 0.5948179108755929, 0.7908464248691286, 0.5878990437303271, 0.656112842474665, 0.7355011492967606, 0.6126585002456393, 0.5528150860752378, 0.5473943995577949, 0.6192274566207613, 0.5416403821536473, 0.5263910689524242, 0.4804624089172908]
+Train_plant_losses   : [3.7062393597194125, 3.7040451526641847, 3.645050845827375, 3.5291018009185793, 3.441161298751831, 3.366170174734933, 3.299945705277579, 3.2771209035600934, 3.2260362897600445, 3.1092643976211547, 3.0880117109843663, 2.9991497380392893, 3.0366552897862027, 2.961338632447379, 2.8844778265271867, 3.0428753103528705, 2.930161574908665, 2.9651949507849555, 2.862804789202554, 2.9462058544158936, 2.810907583577292, 2.836945608683995, 3.0796741349356513, 2.8111801726477488, 2.8873791507312228, 3.0743815847805567, 2.856638261250087, 3.0448013356753756, 3.028807382924216, 3.186707535811833, 3.19606784922736, 2.8334554178374156, 3.193506108011518, 2.9380319799695696, 3.3763904673712593, 3.331826203210013, 3.52801844051906, 3.1299826775278365, 3.4669500878879003, 3.498946613924844, 3.2151369741984777, 3.0222178714615957, 3.1647892934935435, 3.174531931536538, 3.2738330824034554, 2.994801982811519, 3.5452709657805306, 3.3922386510031566, 3.6276151214327133, 3.4236334034374782]
+Train_accuracy_prog  : [tensor(0.0375, device='cuda:0'), tensor(0.0545, device='cuda:0'), tensor(0.0786, device='cuda:0'), tensor(0.0804, device='cuda:0'), tensor(0.0902, device='cuda:0'), tensor(0.1009, device='cuda:0'), tensor(0.1045, device='cuda:0'), tensor(0.1268, device='cuda:0'), tensor(0.1134, device='cuda:0'), tensor(0.1312, device='cuda:0'), tensor(0.1259, device='cuda:0'), tensor(0.1268, device='cuda:0'), tensor(0.1411, device='cuda:0'), tensor(0.1446, device='cuda:0'), tensor(0.1518, device='cuda:0'), tensor(0.1473, device='cuda:0'), tensor(0.1625, device='cuda:0'), tensor(0.1634, device='cuda:0'), tensor(0.1554, device='cuda:0'), tensor(0.1464, device='cuda:0'), tensor(0.1527, device='cuda:0'), tensor(0.1455, device='cuda:0'), tensor(0.1625, device='cuda:0'), tensor(0.1723, device='cuda:0'), tensor(0.1670, device='cuda:0'), tensor(0.1696, device='cuda:0'), tensor(0.1705, device='cuda:0'), tensor(0.1473, device='cuda:0'), tensor(0.1688, device='cuda:0'), tensor(0.1625, device='cuda:0'), tensor(0.1830, device='cuda:0'), tensor(0.1714, device='cuda:0'), tensor(0.1830, device='cuda:0'), tensor(0.1982, device='cuda:0'), tensor(0.1848, device='cuda:0'), tensor(0.1518, device='cuda:0'), tensor(0.1795, device='cuda:0'), tensor(0.1911, device='cuda:0'), tensor(0.1902, device='cuda:0'), tensor(0.1875, device='cuda:0'), tensor(0.1893, device='cuda:0'), tensor(0.1964, device='cuda:0'), tensor(0.1741, device='cuda:0'), tensor(0.1964, device='cuda:0'), tensor(0.1929, device='cuda:0'), tensor(0.1982, device='cuda:0'), tensor(0.1911, device='cuda:0'), tensor(0.1991, device='cuda:0'), tensor(0.1955, device='cuda:0'), tensor(0.2036, device='cuda:0')]
+Test acc  =  0.5357142857142857
+Test Loss =  1.2188647431986672

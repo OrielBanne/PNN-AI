@@ -1,3 +1,12 @@
+########################################################################################################
+#                                                                                                      #
+#                                         ModalityDataset                                              #
+#                                                                                                      #
+########################################################################################################
+
+
+
+
 from datetime import datetime
 import glob
 import torch
@@ -5,11 +14,16 @@ from torch.utils import data
 from torchvision import transforms
 from abc import abstractmethod
 from typing import Tuple
+import matplotlib.pyplot as plt
 
 from .labels import labels
-from .exceptions import *
+#from .exceptions import *
 from .transformations import RandomPNNTransform
+from train.parameters import *  # importing all parameters
 
+# just checking DirEmptyError
+class DirEmptyError(Exception):
+    pass
 
 class ModalityDataset(data.Dataset):
     """
@@ -17,8 +31,8 @@ class ModalityDataset(data.Dataset):
     """
 
     def __init__(self, root_dir: str, exp_name: str, directory_suffix: str, img_len: int,
-                 positions: Tuple[Tuple[int, int], ...], split_cycle=7, start_date=datetime(2019, 6, 4),
-                 end_date=datetime(2019, 7, 7), skip=1, max_len=None, transform=None):
+                 positions: Tuple[Tuple[int, int], ...], split_cycle=7, start_date=start_date,
+                 end_date=end_date, skip=1, max_len=None, transform=None):
         """
         :param root_dir: path to the experiment directory
         :param exp_name: the experiment we want to use
@@ -30,10 +44,16 @@ class ModalityDataset(data.Dataset):
         :param max_len: the max amount of images to use; if None - no limit
         :param transform: optional transform to be applied on each frame
         """
+        print('inside ModalityDataset', end = " ")
+        print('root_dir = ',root_dir)
 
         self.root_dir = root_dir
+        
+        print('directory_suffix   =  ',directory_suffix)
         self.directory_suffix = directory_suffix
         dirs = sorted(glob.glob(f'{root_dir}/*{directory_suffix}'))
+        
+
         dirs = self.__filter_dirs(dirs, start_date.date(), end_date.date())
         self.cycles_dirs = self.__get_cycles_dirs(dirs, split_cycle, skip)
 
@@ -59,7 +79,7 @@ class ModalityDataset(data.Dataset):
             self.transform = transform
 
     def __get_dir_date(self, directory):
-        dir_format = f"{self.root_dir}/%Y_%m_%d_%H_%M_%S_{self.directory_suffix}"
+        dir_format = f"{self.root_dir}%Y_%m_%d_%H_%M_%S_{self.directory_suffix}"
         return datetime.strptime(directory, dir_format).date()
 
     def __get_cycles_dirs(self, dirs, split_cycle, skip):
@@ -96,11 +116,16 @@ class ModalityDataset(data.Dataset):
         tensors = []
 
         for directory in self.cycles_dirs[cycle_day]:
+            # print('Directory  : ', directory)
             try:
                 image = self._get_image(directory, self.positions[plant])
                 tensors.append(image)
             except DirEmptyError:
+                print('----------------------------------------------------------------')
+                print('Empty Directory ',directory)
+                print('----------------------------------------------------------------')
                 pass
+            # plt.imsave('/home/orielban/PNN-AI/PNN-AI/debug_plant_images/',image)
 
         for t in self.transform.transforms:
             if isinstance(t, RandomPNNTransform):
