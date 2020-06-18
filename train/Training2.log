@@ -1,0 +1,135 @@
+2020-06-17 16:58:03,640 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 16:58:03,640 INFO:	New Train Loop Start:
+2020-06-17 17:47:19,052 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 17:47:19,052 INFO:	New Train Loop Start:
+2020-06-17 18:02:51,544 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 18:02:51,545 INFO:	New Train Loop Start:
+2020-06-17 21:14:50,584 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 21:14:50,584 INFO:	New Train Loop Start:
+2020-06-17 21:16:57,368 INFO:	epoch 1: label loss:    1.855 plant loss:    3.754 accuracy:    0.035
+2020-06-17 21:17:21,675 INFO:	 Test label accuracy    0.125  Test label loss     1.821
+2020-06-17 21:17:21,675 INFO:		saving model with new best loss 1.8211662570635478
+2020-06-17 22:07:20,334 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 22:07:20,334 INFO:	New Train Loop Start:
+2020-06-17 22:15:27,302 INFO:	epoch 1: label loss:    1.847 plant loss:    3.758 accuracy:    0.025
+2020-06-17 22:15:57,851 INFO:	 Test label accuracy    0.125  Test label loss     1.792
+2020-06-17 22:15:57,851 INFO:		saving model with new best loss 1.7918717463811238
+2020-06-17 22:25:07,768 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 22:25:07,768 INFO:	New Train Loop Start:
+2020-06-17 22:47:13,829 INFO:	epoch 1: label loss:    1.834 plant loss:    3.757 accuracy:    0.033
+2020-06-17 22:51:30,367 INFO:	 Test label accuracy    0.125  Test label loss     1.892
+2020-06-17 22:51:30,370 INFO:		saving model with new best loss 1.8921099503835042
+2020-06-17 23:41:17,043 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-17 23:41:17,043 INFO:	New Train Loop Start:
+2020-06-18 00:00:32,081 INFO:	epoch 1: label loss:    1.834 plant loss:    3.762 accuracy:    0.025
+2020-06-18 00:02:18,138 INFO:	 Test label accuracy    0.125  Test label loss     1.820
+2020-06-18 00:04:15,465 INFO:	epoch 2: label loss:    1.836 plant loss:    3.752 accuracy:    0.040
+2020-06-18 00:04:38,715 INFO:	 Test label accuracy    0.125  Test label loss     1.828
+2020-06-18 00:06:37,127 INFO:	epoch 3: label loss:    2.588 plant loss:    4.083 accuracy:    0.040
+2020-06-18 00:07:00,587 INFO:	 Test label accuracy    0.125  Test label loss    11.978
+2020-06-18 00:09:03,922 INFO:	epoch 4: label loss:      nan plant loss:      nan accuracy:    0.052
+2020-06-18 00:09:27,437 INFO:	 Test label accuracy    0.125  Test label loss       nan
+2020-06-18 00:11:23,012 INFO:	epoch 5: label loss:      nan plant loss:      nan accuracy:    0.044
+2020-06-18 00:11:46,572 INFO:	 Test label accuracy    0.125  Test label loss       nan
+2020-06-18 00:16:52,137 INFO:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2020-06-18 00:16:52,137 INFO:	New Train Loop Start:
+2020-06-18 00:17:31,500 INFO:	epoch 1: label loss:    1.886 plant loss:    3.758 accuracy:    0.038
+2020-06-18 00:17:39,205 INFO:	 Test label accuracy    0.125  Test label loss     1.807
+2020-06-18 00:18:17,926 INFO:	epoch 2: label loss:    1.879 plant loss:    3.740 accuracy:    0.031
+2020-06-18 00:18:25,860 INFO:	 Test label accuracy    0.125  Test label loss     1.811
+2020-06-18 00:19:05,195 INFO:	epoch 3: label loss:    1.835 plant loss:    3.736 accuracy:    0.044
+2020-06-18 00:19:12,756 INFO:	 Test label accuracy    0.125  Test label loss     1.793
+2020-06-18 00:19:50,989 INFO:	epoch 4: label loss:    1.852 plant loss:    3.736 accuracy:    0.044
+2020-06-18 00:19:58,744 INFO:	 Test label accuracy    0.125  Test label loss     1.827
+2020-06-18 00:20:39,435 INFO:	epoch 5: label loss:    1.828 plant loss:    3.741 accuracy:    0.025
+2020-06-18 00:20:47,277 INFO:	 Test label accuracy    0.250  Test label loss     1.795
+2020-06-18 00:21:26,600 INFO:	epoch 6: label loss:    1.851 plant loss:    3.744 accuracy:    0.006
+2020-06-18 00:21:34,335 INFO:	 Test label accuracy    0.125  Test label loss     1.813
+2020-06-18 00:22:13,038 INFO:	epoch 7: label loss:    1.838 plant loss:    3.740 accuracy:    0.031
+2020-06-18 00:22:21,017 INFO:	 Test label accuracy    0.125  Test label loss     1.831
+2020-06-18 00:23:00,353 INFO:	epoch 8: label loss:    1.822 plant loss:    3.737 accuracy:    0.025
+2020-06-18 00:23:07,965 INFO:	 Test label accuracy    0.125  Test label loss     1.811
+2020-06-18 00:23:45,791 INFO:	epoch 9: label loss:    1.825 plant loss:    3.735 accuracy:    0.031
+2020-06-18 00:23:53,476 INFO:	 Test label accuracy    0.125  Test label loss     1.818
+2020-06-18 00:24:31,122 INFO:	epoch 10: label loss:    1.811 plant loss:    3.739 accuracy:    0.044
+2020-06-18 00:24:38,720 INFO:	 Test label accuracy    0.125  Test label loss     1.837
+2020-06-18 00:25:17,001 INFO:	epoch 11: label loss:    1.850 plant loss:    3.736 accuracy:    0.019
+2020-06-18 00:25:24,789 INFO:	 Test label accuracy    0.125  Test label loss     1.842
+2020-06-18 00:26:03,751 INFO:	epoch 12: label loss:    1.809 plant loss:    3.735 accuracy:    0.019
+2020-06-18 00:26:11,565 INFO:	 Test label accuracy    0.125  Test label loss     1.802
+2020-06-18 00:32:55,306 INFO:	epoch 13: label loss:    1.830 plant loss:    3.737 accuracy:    0.044
+2020-06-18 00:34:25,611 INFO:	 Test label accuracy    0.125  Test label loss     1.803
+2020-06-18 00:40:54,343 INFO:	epoch 14: label loss:    1.825 plant loss:    3.740 accuracy:    0.031
+2020-06-18 00:42:20,451 INFO:	 Test label accuracy    0.125  Test label loss     1.797
+2020-06-18 00:50:24,075 INFO:	epoch 15: label loss:    1.814 plant loss:    3.742 accuracy:    0.019
+2020-06-18 00:52:03,200 INFO:	 Test label accuracy    0.125  Test label loss     1.825
+2020-06-18 00:58:26,159 INFO:	epoch 16: label loss:    1.811 plant loss:    3.740 accuracy:    0.025
+2020-06-18 00:59:24,137 INFO:	 Test label accuracy    0.125  Test label loss     1.824
+2020-06-18 01:07:04,836 INFO:	epoch 17: label loss:    1.850 plant loss:    3.738 accuracy:    0.031
+2020-06-18 01:08:06,452 INFO:	 Test label accuracy    0.125  Test label loss     1.831
+2020-06-18 01:08:47,556 INFO:	epoch 18: label loss:    1.839 plant loss:    3.740 accuracy:    0.025
+2020-06-18 01:08:55,416 INFO:	 Test label accuracy    0.125  Test label loss     1.821
+2020-06-18 01:09:34,334 INFO:	epoch 19: label loss:    1.845 plant loss:    3.739 accuracy:    0.019
+2020-06-18 01:09:42,060 INFO:	 Test label accuracy    0.125  Test label loss     1.807
+2020-06-18 01:10:20,472 INFO:	epoch 20: label loss:    1.828 plant loss:    3.739 accuracy:    0.031
+2020-06-18 01:10:28,249 INFO:	 Test label accuracy    0.125  Test label loss     1.820
+2020-06-18 01:11:07,197 INFO:	epoch 21: label loss:    1.819 plant loss:    3.736 accuracy:    0.038
+2020-06-18 01:11:15,015 INFO:	 Test label accuracy    0.125  Test label loss     1.818
+2020-06-18 01:11:53,664 INFO:	epoch 22: label loss:    1.833 plant loss:    3.742 accuracy:    0.006
+2020-06-18 01:12:01,412 INFO:	 Test label accuracy    0.125  Test label loss     1.804
+2020-06-18 01:12:40,268 INFO:	epoch 23: label loss:    1.827 plant loss:    3.737 accuracy:    0.025
+2020-06-18 01:12:48,112 INFO:	 Test label accuracy    0.125  Test label loss     1.827
+2020-06-18 01:13:27,045 INFO:	epoch 24: label loss:    1.830 plant loss:    3.737 accuracy:    0.031
+2020-06-18 01:13:34,824 INFO:	 Test label accuracy    0.125  Test label loss     1.832
+2020-06-18 01:14:13,397 INFO:	epoch 25: label loss:    1.834 plant loss:    3.738 accuracy:    0.019
+2020-06-18 01:14:21,236 INFO:	 Test label accuracy    0.125  Test label loss     1.831
+2020-06-18 01:15:00,225 INFO:	epoch 26: label loss:    1.821 plant loss:    3.739 accuracy:    0.013
+2020-06-18 01:15:07,985 INFO:	 Test label accuracy    0.125  Test label loss     1.823
+2020-06-18 01:15:46,554 INFO:	epoch 27: label loss:    1.839 plant loss:    3.734 accuracy:    0.025
+2020-06-18 01:15:54,292 INFO:	 Test label accuracy    0.125  Test label loss     1.799
+2020-06-18 01:16:32,875 INFO:	epoch 28: label loss:    1.831 plant loss:    3.737 accuracy:    0.025
+2020-06-18 01:16:40,609 INFO:	 Test label accuracy    0.125  Test label loss     1.836
+2020-06-18 01:17:19,203 INFO:	epoch 29: label loss:    1.828 plant loss:    3.738 accuracy:    0.013
+2020-06-18 01:17:26,913 INFO:	 Test label accuracy    0.125  Test label loss     1.819
+2020-06-18 01:18:05,774 INFO:	epoch 30: label loss:    1.821 plant loss:    3.738 accuracy:    0.019
+2020-06-18 01:18:13,489 INFO:	 Test label accuracy    0.125  Test label loss     1.827
+2020-06-18 01:18:52,516 INFO:	epoch 31: label loss:    1.851 plant loss:    3.738 accuracy:    0.031
+2020-06-18 01:19:00,313 INFO:	 Test label accuracy    0.125  Test label loss     1.830
+2020-06-18 01:19:38,842 INFO:	epoch 32: label loss:    1.829 plant loss:    3.739 accuracy:    0.038
+2020-06-18 01:19:46,580 INFO:	 Test label accuracy    0.125  Test label loss     1.817
+2020-06-18 01:20:24,954 INFO:	epoch 33: label loss:    1.835 plant loss:    3.742 accuracy:    0.038
+2020-06-18 01:20:32,784 INFO:	 Test label accuracy    0.125  Test label loss     1.835
+2020-06-18 01:21:11,415 INFO:	epoch 34: label loss:    1.821 plant loss:    3.736 accuracy:    0.013
+2020-06-18 01:21:19,203 INFO:	 Test label accuracy    0.125  Test label loss     1.810
+2020-06-18 01:21:57,966 INFO:	epoch 35: label loss:    1.821 plant loss:    3.739 accuracy:    0.038
+2020-06-18 01:22:05,708 INFO:	 Test label accuracy    0.125  Test label loss     1.816
+2020-06-18 01:22:44,180 INFO:	epoch 36: label loss:    1.822 plant loss:    3.738 accuracy:    0.025
+2020-06-18 01:22:51,962 INFO:	 Test label accuracy    0.125  Test label loss     1.827
+2020-06-18 01:23:30,630 INFO:	epoch 37: label loss:    1.841 plant loss:    3.738 accuracy:    0.019
+2020-06-18 01:23:38,352 INFO:	 Test label accuracy    0.125  Test label loss     1.835
+2020-06-18 01:24:17,063 INFO:	epoch 38: label loss:    1.817 plant loss:    3.734 accuracy:    0.031
+2020-06-18 01:24:24,817 INFO:	 Test label accuracy    0.125  Test label loss     1.822
+2020-06-18 01:25:03,269 INFO:	epoch 39: label loss:    1.842 plant loss:    3.739 accuracy:    0.038
+2020-06-18 01:25:11,033 INFO:	 Test label accuracy    0.125  Test label loss     1.823
+2020-06-18 01:25:49,709 INFO:	epoch 40: label loss:    1.816 plant loss:    3.735 accuracy:    0.031
+2020-06-18 01:25:57,532 INFO:	 Test label accuracy    0.125  Test label loss     1.835
+2020-06-18 01:26:36,294 INFO:	epoch 41: label loss:    1.816 plant loss:    3.737 accuracy:    0.044
+2020-06-18 01:26:44,108 INFO:	 Test label accuracy    0.125  Test label loss     1.803
+2020-06-18 01:27:22,520 INFO:	epoch 42: label loss:    1.821 plant loss:    3.737 accuracy:    0.038
+2020-06-18 01:27:30,317 INFO:	 Test label accuracy    0.125  Test label loss     1.813
+2020-06-18 01:28:09,393 INFO:	epoch 43: label loss:    1.839 plant loss:    3.742 accuracy:    0.038
+2020-06-18 01:28:17,072 INFO:	 Test label accuracy    0.125  Test label loss     1.820
+2020-06-18 01:28:55,918 INFO:	epoch 44: label loss:    1.839 plant loss:    3.739 accuracy:    0.000
+2020-06-18 01:29:03,717 INFO:	 Test label accuracy    0.125  Test label loss     1.825
+2020-06-18 01:29:42,441 INFO:	epoch 45: label loss:    1.842 plant loss:    3.736 accuracy:    0.031
+2020-06-18 01:29:50,136 INFO:	 Test label accuracy    0.125  Test label loss     1.840
+2020-06-18 01:30:29,029 INFO:	epoch 46: label loss:    1.860 plant loss:    3.742 accuracy:    0.000
+2020-06-18 01:30:36,844 INFO:	 Test label accuracy    0.125  Test label loss     1.835
+2020-06-18 01:31:15,701 INFO:	epoch 47: label loss:    1.834 plant loss:    3.739 accuracy:    0.025
+2020-06-18 01:31:23,460 INFO:	 Test label accuracy    0.125  Test label loss     1.798
+2020-06-18 01:32:02,093 INFO:	epoch 48: label loss:    1.847 plant loss:    3.740 accuracy:    0.025
+2020-06-18 01:32:09,808 INFO:	 Test label accuracy    0.125  Test label loss     1.827
+2020-06-18 01:32:48,174 INFO:	epoch 49: label loss:    1.829 plant loss:    3.736 accuracy:    0.031
+2020-06-18 01:32:55,885 INFO:	 Test label accuracy    0.125  Test label loss     1.800
+2020-06-18 01:33:34,517 INFO:	epoch 50: label loss:    1.832 plant loss:    3.740 accuracy:    0.019
+2020-06-18 01:33:42,372 INFO:	 Test label accuracy    0.125  Test label loss     1.798

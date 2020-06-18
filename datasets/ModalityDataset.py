@@ -44,15 +44,15 @@ class ModalityDataset(data.Dataset):
         :param max_len: the max amount of images to use; if None - no limit
         :param transform: optional transform to be applied on each frame
         """
-        print('inside ModalityDataset', end = " ")
-        print('root_dir = ',root_dir)
+        print('@ModalityDataset', end = " ")
+        print('root_dir=',root_dir, end  = " ")
 
         self.root_dir = root_dir
-        
-        print('directory_suffix   =  ',directory_suffix)
+
+        print('dir_suffix=  ',directory_suffix)
         self.directory_suffix = directory_suffix
         dirs = sorted(glob.glob(f'{root_dir}/*{directory_suffix}'))
-        
+
 
         dirs = self.__filter_dirs(dirs, start_date.date(), end_date.date())
         self.cycles_dirs = self.__get_cycles_dirs(dirs, split_cycle, skip)

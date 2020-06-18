@@ -16,6 +16,18 @@ class ExpInfo(NamedTuple):
     modalities_norms: Dict[str, Tuple[List[float], List[float]]]
 
 
+'''
+
+Transforms
+
+Rescale: to scale the image
+RandomCrop: to crop from image randomly. This is data augmentation.
+ToTensor: to convert the numpy images to torch images (we need to swap axes).
+
+'''
+
+
+
 def get_experiment_modalities_params(exp_info: ExpInfo, lwir_skip: int, lwir_max_len: int, vir_max_len: int,
                                      color_max_len: int = None):
     modalities: Dict[str, Dict] = {
@@ -36,13 +48,13 @@ def get_experiment_modalities_params(exp_info: ExpInfo, lwir_skip: int, lwir_max
         }
 
     modalities.update(
-        {
+        {# this is VIR, should be changed
             mod: {
                 'max_len': vir_max_len, 'transform': T.Compose(
                     [T.Normalize(*norms), T.ToPILImage(),
                      RandomCrop((458, 458)), RandomHorizontalFlip(),
                      RandomVerticalFlip(), T.ToTensor(), GreyscaleToRGB()])
-            } for mod, norms in exp_info.modalities_norms.items() if mod != 'lwir' and mod != 'color'
+            } for mod, norms in exp_info.modalities_norms.items() if mod != 'lwir' and mod != 'color' # if not changed - other modalities should be added here as well
         }
     )
 
@@ -91,6 +103,19 @@ experiments_info: Dict[str, ExpInfo] = {
             '732nm': ([.2263], [.6049]),
             '970nm': ([.0035], [.0038]),
             'noFilter': ([.05136], [.22331]),
+            'color': ([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+        }
+    ),
+    'Exp3': ExpInfo(
+        datetime(2019, 10, 28),
+        datetime(2019, 12, 7),
+        {# Normalization according to mean and StdDev
+            'lwir': ([21596.1055], [139.9253]),
+            '577nm': ([0.0266], [0.0574]),
+            '692nm': ([.1453], [.3015]),
+            '732nm': ([.1578], [.6006]),
+            '970nm': ([.0026], [.0045]),
+            'noFilter': ([1.4025], [3.6011]),
             'color': ([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         }
     ),
@@ -161,5 +186,30 @@ plant_positions = {
             (957, 2153), (1156, 2148), (1397, 2154), (1676, 2147), (1934, 2148), (2343, 2147), (2635, 2124), (2841, 2110), (3064, 2115),
             (967, 2364), (1183, 2404), (1421, 2428), (1653, 2431), (1930, 2428), (2358, 2416), (2591, 2434), (2815, 2425), (3071, 2504)
         )
+    }),
+    'Exp3': ExpPositions({
+        'lwir_positions': (
+            (86, 108), (186, 100), (294, 98),  (388, 100), (484, 104), (566, 100),
+            (84, 194), (188, 194), (300, 196), (398, 198), (486, 198), (572, 198),
+            (86, 278), (198, 282), (302, 282), (398, 290), (488, 286), (570, 290),
+            (88, 360), (198, 362), (304, 364), (404, 364), (484, 356), (576, 358),
+            (88, 434), (204, 430), (316, 440), (406, 440), (488, 432), (576, 432)
+        ),
+        'vir_positions': (
+            (837, 679) , (1619, 615), (2363, 593), (3067, 601), (3787, 601), (4399, 565), 
+            (863, 1329),(1611, 1319),(2429, 1313),(3153, 1313),(3791, 1307),(4443, 1299), 
+            (873, 1943),(1707, 1961),(2473, 1933),(3161, 1971),(3825, 1949),(4465, 1981), 
+            (887, 2557),(1727, 2533),(2489, 2555),(3235, 2519),(3805, 2461),(4509, 2481), 
+            (899, 3093),(1773, 3025),(2591, 3093),(3249, 3081),(3861, 3019),(4521, 3021)
+        ),
+        'color_positions': (
+            (1091, 1103),(1501, 1093),(1875, 1093),(2227, 1109),(2585, 1113),(2909, 1089),
+            (1107, 1459),(1489, 1451),(1909, 1447),(2255, 1465),(2587, 1457),(2915, 1467),
+            (1109, 1759),(1529, 1771),(1915, 1767),(2259, 1795),(2601, 1791),(2921, 1807),
+            (1107, 2059),(1533, 2061),(1917, 2077),(2289, 2073),(2581, 2039),(2945, 2067),
+            (1103, 2343),(1551, 2315),(1957, 2359),(2299, 2341),(2599, 2327),(2957, 2341)
+        )
     })
 }
+
+

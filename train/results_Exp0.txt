@@ -1,0 +1,135 @@
+training start time :    2020-06-18 00:14:20.570807
+########################################################################################################
+#                                                                                                      #
+#                                  PARAMETERS AND HYPER PARAMETERS                                     #
+#                                                                                                      #
+########################################################################################################
+
+from datetime import datetime, timedelta
+
+print('~~~~~~~~~~~~~IMPORT PARAMETERS~~~~~~~~~~~~~')
+
+# Default Parameters
+experiment = 'Exp0'  # Experiment name
+experiment_path = f'/home/pnn/experiments/{experiment}/'
+
+num_days = None  ### should be None
+split_cycle = 1
+
+lwir_max_len = 64  # prefer 64
+lwir_skip = 6
+vir_max_len = 16  # need to understand how many of these are the max that exist
+color_max_len = 16  # "
+
+load_checkpoint = False
+use_checkpoints = True
+
+# define start and end dates of the experiment here, this should be a dictionary according to the experiment
+
+# Exp0
+start_date = datetime(2019, 6, 4)
+end_date = datetime(2019, 7, 7)
+
+# Exp1
+# start_date = datetime(2019, 7, 28)
+# end_date   = datetime(2019, 8, 4)
+
+# Exp2
+# start_date = datetime(2019, 9, 20)
+# end_date   = datetime(2019, 10, 13)
+
+# Exp3
+# start_date = datetime(2019, 10, 28)
+# end_date   = datetime(2019, 12, 7)
+
+
+# Exp3_5
+# start_date = datetime()
+# end_date   = datetime()
+
+# Exp3_6
+# start_date = datetime()
+# end_date   = datetime()
+
+# Exp4
+# start_date = datetime()
+# end_date   = datetime()
+
+# Choose Device
+cdevice = "cuda:0"
+
+# training hyper-parameters       #     added again , '577nm'
+excluded_modalities = ['noFilter', 'polar', 'polar_a']  # All of the modalities that you don't want to use
+train_ratio = 5 / 6  # dataset train/test ratio
+batch_size = 4  # training batch size
+loss_delta = 0.0  # The minimum above the best loss that is allowed for the model to be  saved
+return_epochs = 0  # Epochs without improvement allowed (loss_delta included). Return to the best checkpoint otherwise. 0 to disable
+epochs = 50  # number of epochs during train
+lamda = 0.5e-1  # generic lerning rate to start all learners from
+label_lr = lamda  # phenotype classifier learning rate
+plant_lr = lamda  # plant classifier LR used for transfer learning
+extractor_lr = lamda  # feature extractor LR
+domain_adapt_lr = lamda  # domain adaptation learning rate
+
+#  Clustering Parameters
+compare_clusters = True  # Compare cluster evaluation results for used modalities
+num_clusters = 6  # The number of clusters used in the evaluations, default is Exp number of phenotypes
+load_features = False  # action='store_true', default=False
+cluster_tsne_results = '/home/orielban/PNN-AI/PNN-AI/tsne_results/'
+# load features -- when true Loads the features from a file, else - computed from the extractor and saved in a csv file.
+
+# Clustering - TSNE
+plot_TSNE = True  # Save a TSNE plot for used modalities
+PCA = 0  # default = 0, no PCA usage . If PCA > 0 -- features will be transformed by PCA with that number of components.
+--------------------------------------------------------------------------------------------
+	epoch 1: label loss:    1.886 plant loss:    3.758 accuracy:    0.038 
+	epoch 2: label loss:    1.879 plant loss:    3.740 accuracy:    0.031 
+	epoch 3: label loss:    1.835 plant loss:    3.736 accuracy:    0.044 
+	epoch 4: label loss:    1.852 plant loss:    3.736 accuracy:    0.044 
+	epoch 5: label loss:    1.828 plant loss:    3.741 accuracy:    0.025 
+	epoch 6: label loss:    1.851 plant loss:    3.744 accuracy:    0.006 
+	epoch 7: label loss:    1.838 plant loss:    3.740 accuracy:    0.031 
+	epoch 8: label loss:    1.822 plant loss:    3.737 accuracy:    0.025 
+	epoch 9: label loss:    1.825 plant loss:    3.735 accuracy:    0.031 
+	epoch 10: label loss:    1.811 plant loss:    3.739 accuracy:    0.044 
+	epoch 11: label loss:    1.850 plant loss:    3.736 accuracy:    0.019 
+	epoch 12: label loss:    1.809 plant loss:    3.735 accuracy:    0.019 
+	epoch 13: label loss:    1.830 plant loss:    3.737 accuracy:    0.044 
+	epoch 14: label loss:    1.825 plant loss:    3.740 accuracy:    0.031 
+	epoch 15: label loss:    1.814 plant loss:    3.742 accuracy:    0.019 
+	epoch 16: label loss:    1.811 plant loss:    3.740 accuracy:    0.025 
+	epoch 17: label loss:    1.850 plant loss:    3.738 accuracy:    0.031 
+	epoch 18: label loss:    1.839 plant loss:    3.740 accuracy:    0.025 
+	epoch 19: label loss:    1.845 plant loss:    3.739 accuracy:    0.019 
+	epoch 20: label loss:    1.828 plant loss:    3.739 accuracy:    0.031 
+	epoch 21: label loss:    1.819 plant loss:    3.736 accuracy:    0.038 
+	epoch 22: label loss:    1.833 plant loss:    3.742 accuracy:    0.006 
+	epoch 23: label loss:    1.827 plant loss:    3.737 accuracy:    0.025 
+	epoch 24: label loss:    1.830 plant loss:    3.737 accuracy:    0.031 
+	epoch 25: label loss:    1.834 plant loss:    3.738 accuracy:    0.019 
+	epoch 26: label loss:    1.821 plant loss:    3.739 accuracy:    0.013 
+	epoch 27: label loss:    1.839 plant loss:    3.734 accuracy:    0.025 
+	epoch 28: label loss:    1.831 plant loss:    3.737 accuracy:    0.025 
+	epoch 29: label loss:    1.828 plant loss:    3.738 accuracy:    0.013 
+	epoch 30: label loss:    1.821 plant loss:    3.738 accuracy:    0.019 
+	epoch 31: label loss:    1.851 plant loss:    3.738 accuracy:    0.031 
+	epoch 32: label loss:    1.829 plant loss:    3.739 accuracy:    0.038 
+	epoch 33: label loss:    1.835 plant loss:    3.742 accuracy:    0.038 
+	epoch 34: label loss:    1.821 plant loss:    3.736 accuracy:    0.013 
+	epoch 35: label loss:    1.821 plant loss:    3.739 accuracy:    0.038 
+	epoch 36: label loss:    1.822 plant loss:    3.738 accuracy:    0.025 
+	epoch 37: label loss:    1.841 plant loss:    3.738 accuracy:    0.019 
+	epoch 38: label loss:    1.817 plant loss:    3.734 accuracy:    0.031 
+	epoch 39: label loss:    1.842 plant loss:    3.739 accuracy:    0.038 
+	epoch 40: label loss:    1.816 plant loss:    3.735 accuracy:    0.031 
+	epoch 41: label loss:    1.816 plant loss:    3.737 accuracy:    0.044 
+	epoch 42: label loss:    1.821 plant loss:    3.737 accuracy:    0.038 
+	epoch 43: label loss:    1.839 plant loss:    3.742 accuracy:    0.038 
+	epoch 44: label loss:    1.839 plant loss:    3.739 accuracy:    0.000 
+	epoch 45: label loss:    1.842 plant loss:    3.736 accuracy:    0.031 
+	epoch 46: label loss:    1.860 plant loss:    3.742 accuracy:    0.000 
+	epoch 47: label loss:    1.834 plant loss:    3.739 accuracy:    0.025 
+	epoch 48: label loss:    1.847 plant loss:    3.740 accuracy:    0.025 
+	epoch 49: label loss:    1.829 plant loss:    3.736 accuracy:    0.031 
+	epoch 50: label loss:    1.832 plant loss:    3.740 accuracy:    0.019 
+Train_label_losses   :1.8860913038253784 1.8791157245635985 1.8352896690368652 1.8517271995544433 1.8278380036354065 1.8507519125938416 1.8381516218185425 1.8223962426185607 1.8246536731719971 1.8114426374435424 1.8498828649520873 1.8092521190643311 1.8303090572357177 1.82519633769989 1.8144103050231934 1.8113361716270446 1.8496313333511352 1.839045262336731 1.8450942277908324 1.828389859199524 1.8185145258903503 1.832778000831604 1.82749844789505 1.8301640748977661 1.834490430355072 1.820936918258667 1.8394502758979798 1.8305091738700867 1.8283856749534606 1.8213899970054626 1.8511554956436158 1.828985321521759 1.8353819727897644 1.821436583995819 1.821229135990143 1.822167420387268 1.8407920837402343 1.8168544054031373 1.842059886455536 1.8160800814628602 1.8164126992225647 1.8212689518928529 1.8391491413116454 1.8392859816551208 1.841937744617462 1.8604930281639098 1.8335495829582213 1.8471861362457276 1.828594183921814 1.8320331692695617Train_plant_losses   :3.7584380149841308 3.7400646448135375 3.736484742164612 3.7362043619155885 3.7413480997085573 3.743818259239197 3.74043288230896 3.736735773086548 3.7351838827133177 3.7392857551574705 3.7358139038085936 3.735398507118225 3.737049698829651 3.739955925941467 3.7420117139816282 3.739852857589722 3.737697696685791 3.739756202697754 3.7389840841293336 3.739167094230652 3.7359527111053468 3.7420698165893556 3.7372588396072386 3.73655047416687 3.738357162475586 3.7390120029449463 3.7343958377838136 3.7368996381759643 3.7381752490997315 3.738080382347107 3.738298845291138 3.7393229961395265 3.7422548294067384 3.7363692045211794 3.739475464820862 3.7377317428588865 3.738116002082825 3.7343608379364013 3.73889741897583 3.7347000360488893 3.7370999336242674 3.736767625808716 3.742332696914673 3.7385828733444213 3.7363094806671144 3.741565132141113 3.7386547088623048 3.7399824619293214 3.735736918449402 3.740362811088562Train_accuracy_prog  :tensor(0.0375, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0437, device='cuda:0') tensor(0.0437, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0063, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0437, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0437, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0.0063, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0125, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0125, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0.0125, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0188, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0437, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0.0375, device='cuda:0') tensor(0., device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0., device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0250, device='cuda:0') tensor(0.0312, device='cuda:0') tensor(0.0188, device='cuda:0')
