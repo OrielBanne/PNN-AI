@@ -134,6 +134,9 @@ y_data = torch.Tensor(BLabels)  # <---- this is the line that creates the labels
 dataset = utils.data.TensorDataset(x_data, y_data)
 dataloader = DataLoader(dataset)
 
+torch.save(dataset)
+torch.utils.data()
+
 num = len(dataset)
 print(' dataset length is ', num)
 print('the number of hamama images is : ', len(PlantImages))
@@ -199,12 +202,12 @@ for epoch in range(MaxEpochs):  # loop over the dataset multiple times
     correct = 0
     total = 0
     with torch.no_grad():
-        for data in test_loader:
-            images, labels = data
-            outputs = net(images)
-            _, predicted = torch.max(outputs.data, 1)
+        for testdata in test_loader:
+            testimages, testlabels = testdata
+            testoutputs = net(testimages)
+            _, predicted = torch.max(testoutputs.testdata, 1)
             total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            correct += (predicted == testlabels).sum().item()
     Accuracy.append(correct / total)
 
     # Dynamic plotting

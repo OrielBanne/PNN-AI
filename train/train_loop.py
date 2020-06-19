@@ -5,12 +5,8 @@
 ########################################################################################################
 
 
-import torch
 from torch import nn, optim
-# from torch.utils import data
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
-from datetime import datetime, timedelta
 import logging  # log files package
 import yaml
 
@@ -23,6 +19,7 @@ from train.parameters import *  # importing all parameters
 
 # imports for plotting
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -108,25 +105,25 @@ def test_model(test_config: TestConfig):
     # if test_config.use_checkpoints and loss < test_config.best_loss + test_config.loss_delta:
     #    test_config.best_loss = min(loss, test_config.best_loss)
 
- #   if test_config.use_checkpoints and loss < test_config.best_loss - test_config.loss_delta:
- #       test_config.best_loss = loss
-#
-  #      print(f'\t\tsaving model with new best loss {loss}')
- #       logging.info(f'\t\tsaving model with new best loss {loss}')
- #       torch.save({
- #           'feat_ext_state_dict': test_config.feat_ext.state_dict(),
- #           'label_cls_state_dict': test_config.label_cls.state_dict(),
- #           'plant_cls_state_dict': test_config.plant_cls.state_dict(),
- #           'loss': loss,
-#            'accuracy': accuracy
-#        }, f'checkpoints/{test_config.checkpoint_name}')
-#        test_config.epochs_without_improvement = 0
-#    elif test_config.return_epochs > 0:
-#        test_config.epochs_without_improvement += 1
+    #   if test_config.use_checkpoints and loss < test_config.best_loss - test_config.loss_delta:
+    #       test_config.best_loss = loss
+    #
+    #      print(f'\t\tsaving model with new best loss {loss}')
+    #       logging.info(f'\t\tsaving model with new best loss {loss}')
+    #       torch.save({
+    #           'feat_ext_state_dict': test_config.feat_ext.state_dict(),
+    #           'label_cls_state_dict': test_config.label_cls.state_dict(),
+    #           'plant_cls_state_dict': test_config.plant_cls.state_dict(),
+    #           'loss': loss,
+    #            'accuracy': accuracy
+    #        }, f'checkpoints/{test_config.checkpoint_name}')
+    #        test_config.epochs_without_improvement = 0
+    #    elif test_config.return_epochs > 0:
+    #        test_config.epochs_without_improvement += 1
 
-  #      if test_config.epochs_without_improvement == test_config.return_epochs:  # check the rational of this statement
-  #          restore_checkpoint(test_config)
-  #          test_config.epochs_without_improvement = 0
+    #      if test_config.epochs_without_improvement == test_config.return_epochs:  # check the rational of this statement
+    #          restore_checkpoint(test_config)
+    #          test_config.epochs_without_improvement = 0
 
     return accuracy, loss
 
@@ -151,7 +148,6 @@ def train_loop(test_config: TestConfig):
         test_config.feat_ext.train()
         test_config.label_cls.train()
         test_config.plant_cls.train()
-
 
         tot_label_loss = 0.
         tot_plant_loss = 0.
@@ -205,13 +201,15 @@ def train_loop(test_config: TestConfig):
 
             # label_out = forward through
             label_out = test_config.label_cls(features)  # training dataset labels are infered from the net
-            label_loss = test_config.criterion(label_out,labels)  # infered labels and original labels are sent to the loss criterion
+            label_loss = test_config.criterion(label_out,
+                                               labels)  # infered labels and original labels are sent to the loss criterion
 
             plant_out = test_config.plant_cls(
                 features_plants)  # training dataset plant classification is infered from the net
             plant_loss = test_config.criterion(plant_out,
                                                plants)  # infered plant classification and original plant names are sent to the loss criterion
-            (label_loss + plant_loss).backward()  # backward propagation for both label classification and plant classification (opposit directions)
+            (
+                        label_loss + plant_loss).backward()  # backward propagation for both label classification and plant classification (opposit directions)
 
             equality = (labels.data == label_out.max(dim=1)[1])  # finds out which labels are equal
             tot_accuracy += equality.float().mean()  # sums up batch label correct inferences
@@ -313,14 +311,6 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # Cleaning GPU Cache memory
-    #if torch.cuda.is_available():
-    #    torch.cuda.empty_cache()
-    #    # defining which GPU will run the process by cdevice from parameters file:
-    #    device = torch.device(cdevice)
-    #else:
-    #    device = 'cpu'
-
     curr_experiment = experiments_info[experiment]
 
     modalities = get_experiment_modalities_params(curr_experiment, lwir_skip, lwir_max_len, vir_max_len, color_max_len)
@@ -354,7 +344,7 @@ def main():
     print('------------------------------------------------------------------------------------')
     print('len train_loader = ', len(train_loader))
     print('------------------------------------------------------------------------------------')
-    
+
     print('used_modalities.keys()  = ', used_modalities.keys())
 
     # creating feat_extractor_params
