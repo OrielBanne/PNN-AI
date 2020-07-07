@@ -13,7 +13,10 @@ from train import parameters  # importing all parameters
 # imports for plotting
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import draw, show
 
+# SKLearn -
+from sklearn.metrics import confusion_matrix
 
 # define test config
 class TestConfig:
@@ -71,7 +74,7 @@ def test_model(test_config: TestConfig):
             label_out = test_config.label_cls(features)
             label_loss = test_config.criterion(label_out, labels)
 
-            equality = (labels.data == label_out.max(dim=1)[1])
+            equality = (labels.data == label_out.max(dim=1)[1]) # Accumulate values here to create the confusion matrix
             tot_correct += equality.float().sum().item()
             tot_label_loss += label_loss.item()
 
@@ -144,7 +147,8 @@ def train_loop(test_config: TestConfig):
             (label_loss + plant_loss).backward()
 
             equality = (labels.data == label_out.max(dim=1)[1])
-            tot_accuracy += equality.float().mean()
+            jjj = equality.float().mean()
+            tot_accuracy += jjj.item()
 
             test_config.label_opt.step()
             test_config.ext_opt.step()
@@ -155,37 +159,34 @@ def train_loop(test_config: TestConfig):
 
         train_size = len(test_config.train_set)
         a, b, c = tot_label_loss / train_size, tot_plant_loss / train_size, tot_accuracy / train_size
-        print(f"\t. label loss: %8.3f plant loss: %8.3f accuracy: %8.3f" % ((a), (b), (c)), end=' ')
+        print(f'  Train:  label loss: %8.3f   plant loss: %8.3f   accuracy: %8.3f' % ((a), (b), (c)), end=' ')
 
         train_label_losses.append(a)
         train_plant_losses.append(b)
         train_accuracy_prog.append(c)  # meaning  = train accuracy progress
 
-        # test_model(test_config)
         test_acc, test_loss = test_model(test_config)
         test_accuracy.append(test_acc)
         test_losses.append(test_loss)
 
     fig = plt.figure(1)
-    plt.plot(train_accuracy_prog, 'or')
-    plt.plot(test_accuracy, 'ob')
-    plt.figlegend(
-        (train_accuracy_prog, test_accuracy),
-        ('Train Accuracy', 'Test Accuracy'),
-        loc='upper right')
-    plt.show()
+    plt.plot(train_accuracy_prog, 'or', label='train accuracy')
+    plt.plot(test_accuracy, 'ob', label='test accuracy')
+    plt.legend(title='Parameters')
+    plt.title('Train and Test Accuracy')
+    # plt.xlabel('x label')
+    # plt.ylabel('y label')
+    draw()
 
     fig = plt.figure(2)
-    plt.plot(train_label_losses, 'or')
-    plt.plot(train_plant_losses, 'ob')
-    plt.plot(test_losses, 'og')
-    plt.figlegend(
-        (train_label_losses, train_plant_losses, test_losses),
-        ('Train Label Loss', 'Train Plant Loss', 'Test Label Loss'),
-        loc='upper right')
-    plt.show()
-
-
+    plt.plot(train_label_losses, 'or', label='train label loss')
+    plt.plot(train_plant_losses, 'ob',  label='train plant loss')
+    plt.plot(test_losses, 'og',  label='test label loss')
+    plt.title('Train and Test Losses')
+    plt.legend(title='Parameters')
+    # plt.xlabel('x label')
+    # plt.ylabel('y label')
+    show()
 
 
 def restore_checkpoint(test_config: TestConfig):
@@ -242,9 +243,9 @@ def main():
 
     criterion = nn.CrossEntropyLoss(reduction='sum').to(device)
 
-    label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, weight_decay=1e-3)
-    plant_opt = optim.SGD(plant_cls.parameters(), lr=parameters.plant_lr, weight_decay=1e-3)
-    ext_opt = optim.SGD(feat_ext.parameters(), lr=parameters.extractor_lr, weight_decay=1e-3)
+    label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, momentum=0.9, weight_decay=1e-3)
+    plant_opt = optim.SGD(plant_cls.parameters(), lr=parameters.plant_lr, momentum=0.9, weight_decay=1e-3)
+    ext_opt = optim.SGD(feat_ext.parameters(), lr=parameters.extractor_lr, momentum=0.9, weight_decay=1e-3)
 
     best_loss = float('inf')
 
