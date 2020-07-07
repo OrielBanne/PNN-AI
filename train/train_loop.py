@@ -173,7 +173,7 @@ def train_loop(test_config: TestConfig):
             # else:
             #     print(' x is not none, x dictionary length is ', len(x))
 
-            # Coppied everything to x and now earasing the label and plant
+            # Coppied everything to x and now erasing the label and plant
             del x['label']
             del x['plant']
 
@@ -194,9 +194,9 @@ def train_loop(test_config: TestConfig):
             features_plants = features.clone()
             '''tensor.clone()creates a copy of tensor that imitates the original tensor's requires_grad field.'''
 
-            # read domain adaptation as refference for the following part
-            # the following makes the gradients of the plant feature extractor get multiplied by lambda with a minus sign
-            # setting this to negative makes plant optimization and label optimization work in opposing directions
+            # -- domain adaptation --  as reference for the following part the following makes the gradients of the
+            # plant feature extractor get multiplied by lambda with a minus sign setting this to negative makes plant
+            # optimization and label optimization work in opposing directions
             features_plants.register_hook(lambda grad: -test_config.domain_adapt_lr * grad)
 
             # label_out = forward through

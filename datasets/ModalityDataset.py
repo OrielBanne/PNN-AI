@@ -125,7 +125,6 @@ class ModalityDataset(data.Dataset):
                 print('Empty Directory ',directory)
                 print('----------------------------------------------------------------')
                 pass
-            # plt.imsave('/home/orielban/PNN-AI/PNN-AI/debug_plant_images/',image)
 
         for t in self.transform.transforms:
             if isinstance(t, RandomPNNTransform):
