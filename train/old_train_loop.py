@@ -10,6 +10,10 @@ from model import PlantFeatureExtractor as FeatureExtractor
 from train.utils import get_checkpoint_name, get_used_modalities, get_levels_kernel
 from train import parameters  # importing all parameters
 
+# imports for plotting
+import matplotlib
+import matplotlib.pyplot as plt
+
 
 # define test config
 class TestConfig:
@@ -43,8 +47,6 @@ class TestConfig:
 def test_model(test_config: TestConfig):
     test_loader = data.DataLoader(test_config.test_set, batch_size=test_config.batch_size, num_workers=2, shuffle=True)
 
-    print('\ttesting model:')
-
     test_config.feat_ext.eval()
     test_config.label_cls.eval()
     test_config.plant_cls.eval()
@@ -73,10 +75,9 @@ def test_model(test_config: TestConfig):
             tot_correct += equality.float().sum().item()
             tot_label_loss += label_loss.item()
 
-    accuracy = tot_correct / len(test_config.test_set)
-    loss = tot_label_loss / len(test_config.test_set)
-    print(f"\t\tlabel accuracy - {accuracy}")
-    print(f"\t\tlabel loss - {loss}")
+    accuracy = tot_correct / len(test_config.test_set)  # Total Test Accuracy
+    loss = tot_label_loss / len(test_config.test_set)  # Total Test Loss calculated
+    print(f'\t Test:  Test label loss  %8.3f  \t  Test label accuracy %8.3f' % (loss, accuracy))
 
     if test_config.use_checkpoints and loss < test_config.best_loss + test_config.loss_delta:
         test_config.best_loss = min(loss, test_config.best_loss)
@@ -100,8 +101,13 @@ def test_model(test_config: TestConfig):
 
 
 def train_loop(test_config: TestConfig):
+    train_label_losses = []
+    train_plant_losses = []
+    train_accuracy_prog = []
+    test_accuracy = []
+    test_losses = []
     for epoch in range(test_config.epochs):
-        print(f"epoch {epoch + 1}:")
+        print(f'epoch {epoch + 1}:', end=' ')
 
         test_config.feat_ext.train()
         test_config.label_cls.train()
@@ -147,18 +153,39 @@ def train_loop(test_config: TestConfig):
             tot_label_loss += label_loss.item()
             tot_plant_loss += plant_loss.item()
 
-            num_print = 24
-            if i % num_print == 0 or i * test_config.batch_size == len(test_config.train_set):
-                num_since_last = num_print if i % num_print == 0 else i % num_print
-                print(f"\t{i}. label loss: {tot_label_loss / num_since_last}")
-                print(f"\t{i}. plant loss: {tot_plant_loss / num_since_last}")
-                print(f"\t{i}. accuracy: {tot_accuracy / num_since_last}")
+        train_size = len(test_config.train_set)
+        a, b, c = tot_label_loss / train_size, tot_plant_loss / train_size, tot_accuracy / train_size
+        print(f"\t. label loss: %8.3f plant loss: %8.3f accuracy: %8.3f" % ((a), (b), (c)), end=' ')
 
-                tot_label_loss = 0.
-                tot_plant_loss = 0.
-                tot_accuracy = 0.
+        train_label_losses.append(a)
+        train_plant_losses.append(b)
+        train_accuracy_prog.append(c)  # meaning  = train accuracy progress
 
-        test_model(test_config)
+        # test_model(test_config)
+        test_acc, test_loss = test_model(test_config)
+        test_accuracy.append(test_acc)
+        test_losses.append(test_loss)
+
+    fig = plt.figure(1)
+    plt.plot(train_accuracy_prog, 'or')
+    plt.plot(test_accuracy, 'ob')
+    plt.figlegend(
+        (train_accuracy_prog, test_accuracy),
+        ('Train Accuracy', 'Test Accuracy'),
+        loc='upper right')
+    plt.show()
+
+    fig = plt.figure(2)
+    plt.plot(train_label_losses, 'or')
+    plt.plot(train_plant_losses, 'ob')
+    plt.plot(test_losses, 'og')
+    plt.figlegend(
+        (train_label_losses, train_plant_losses, test_losses),
+        ('Train Label Loss', 'Train Plant Loss', 'Test Label Loss'),
+        loc='upper right')
+    plt.show()
+
+
 
 
 def restore_checkpoint(test_config: TestConfig):
