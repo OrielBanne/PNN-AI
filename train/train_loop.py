@@ -1,15 +1,30 @@
-import torch
+########################################################################################################
+#                                                                                                      #
+#                                            Train  -  Loop                                            #
+#                                                                                                      #
+########################################################################################################
+
+
 from torch import nn, optim
-from torch.utils import data
-import torch.nn.functional as F
-import argparse
-from datetime import timedelta
+from torch.utils.data import DataLoader
+import logging  # log files package
+import yaml
 
 from datasets import Modalities, ModalitiesSubset, classes
 from datasets.transformations import *
 from datasets.experiments import get_experiment_modalities_params, experiments_info, get_all_modalities
-from model import PlantFeatureExtractor as FeatureExtractor
-from .utils import get_checkpoint_name, get_used_modalities, add_experiment_dataset_arguments, get_levels_kernel
+from model import PlantFeatureExtractor as FeatureExtractor  # this must be changed - creates confusion!!
+from train.utils import get_checkpoint_name, get_used_modalities, get_levels_kernel, get_training_name
+from train.parameters import *  # importing all parameters
+
+# imports for plotting
+import matplotlib
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+"""  LOGGING SETUP   """
+logging.basicConfig(filename='Training2.log', level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 
 
 # define test config
@@ -42,18 +57,26 @@ class TestConfig:
 
 
 def test_model(test_config: TestConfig):
-    test_loader = data.DataLoader(test_config.test_set, batch_size=test_config.batch_size, num_workers=2, shuffle=True)
+    test_loader = DataLoader(test_config.test_set,
+                             batch_size=test_config.batch_size,
+                             num_workers=2,
+                             pin_memory=True,
+                             shuffle=True)
 
-    print('\ttesting model:')
+    '''
+    model.train() --> the model knows it has to learn the layers
+    model.eval()  --> indicates that nothing new is to be learnt and the model is used for testing.
+    '''
 
+    # Because this is the test part - Model Eval is used
     test_config.feat_ext.eval()
     test_config.label_cls.eval()
     test_config.plant_cls.eval()
 
-    tot_correct = 0.
-    tot_label_loss = 0.
-    with torch.no_grad():
-        for batch in test_loader:
+    tot_correct = 0.  # what is correct
+    tot_label_loss = 0.  # label loss
+    with torch.no_grad():  # test stage - no gradients are calculated
+        for batch in test_loader:  # batch calculations are made
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             labels = batch['label'].to(test_config.device)
@@ -66,44 +89,65 @@ def test_model(test_config: TestConfig):
             for key in x:
                 x[key] = x[key].to(test_config.device)
 
+            # x forward through plant feature extractor - applying the feature extractor
             features: torch.Tensor = test_config.feat_ext(**x)
-            label_out = test_config.label_cls(features)
-            label_loss = test_config.criterion(label_out, labels)
+            label_out = test_config.label_cls(features)  # here test dataset labels are inferred from the net
+            label_loss = test_config.criterion(label_out, labels)  # loss compares y_hat with y
+            # criterion
 
-            equality = (labels.data == label_out.max(dim=1)[1])
-            tot_correct += equality.float().sum().item()
-            tot_label_loss += label_loss.item()
+            # 'there must be a better way! ' - check scikit-learn
+            equality = (labels.data == label_out.max(dim=1)[1])  # finds out which labels are equal
+            tot_correct += equality.float().sum().item()  # sums up batch correct inferences
+            tot_label_loss += label_loss.item()  # sums up batch label loss criteria to determine general loss
 
-    accuracy = tot_correct / len(test_config.test_set)
-    loss = tot_label_loss / len(test_config.test_set)
-    print(f"\t\tlabel accuracy - {accuracy}")
-    print(f"\t\tlabel loss - {loss}")
+    accuracy = tot_correct / len(test_config.test_set)  # Total Test Accuracy
+    loss = tot_label_loss / len(test_config.test_set)  # Total Test Loss calculated
+    print(f'\t\t\t\t Model Test: \t    Test label loss  %8.3f  \t  Test label accuracy %8.3f' % (loss, accuracy))
+    logging.info(f'\t Test label accuracy %8.3f  Test label loss  %8.3f' % (accuracy, loss))
 
-    if test_config.use_checkpoints and loss < test_config.best_loss + test_config.loss_delta:
-        test_config.best_loss = min(loss, test_config.best_loss)
+    # if test_config.use_checkpoints and loss < test_config.best_loss + test_config.loss_delta:
+    #    test_config.best_loss = min(loss, test_config.best_loss)
 
-        print(f'\t\tsaving model with new best loss {loss}')
-        torch.save({
-            'feat_ext_state_dict': test_config.feat_ext.state_dict(),
-            'label_cls_state_dict': test_config.label_cls.state_dict(),
-            'plant_cls_state_dict': test_config.plant_cls.state_dict(),
-            'loss': loss,
-            'accuracy': accuracy
-        }, f'checkpoints/{test_config.checkpoint_name}')
-        test_config.epochs_without_improvement = 0
-    elif test_config.return_epochs > 0:
-        test_config.epochs_without_improvement += 1
-        if test_config.epochs_without_improvement == test_config.return_epochs:
-            restore_checkpoint(test_config)
-            test_config.epochs_without_improvement = 0
+    #   if test_config.use_checkpoints and loss < test_config.best_loss - test_config.loss_delta:
+    #       test_config.best_loss = loss
+    #
+    #      print(f'\t\tsaving model with new best loss {loss}')
+    #       logging.info(f'\t\tsaving model with new best loss {loss}')
+    #       torch.save({
+    #           'feat_ext_state_dict': test_config.feat_ext.state_dict(),
+    #           'label_cls_state_dict': test_config.label_cls.state_dict(),
+    #           'plant_cls_state_dict': test_config.plant_cls.state_dict(),
+    #           'loss': loss,
+    #            'accuracy': accuracy
+    #        }, f'checkpoints/{test_config.checkpoint_name}')
+    #        test_config.epochs_without_improvement = 0
+    #    elif test_config.return_epochs > 0:
+    #        test_config.epochs_without_improvement += 1
+
+    #      if test_config.epochs_without_improvement == test_config.return_epochs:  # check the rational of this statement
+    #          restore_checkpoint(test_config)
+    #          test_config.epochs_without_improvement = 0
 
     return accuracy, loss
 
 
 def train_loop(test_config: TestConfig):
-    for epoch in range(test_config.epochs):
-        print(f"epoch {epoch + 1}:")
+    logging.info('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    logging.info('\tNew Train Loop Start:')
+    loop_start_time = datetime.today()
+    print(' **** Running        train loop                          *****  ', datetime.now())
+    # parameters for graph
+    train_label_losses = []
+    train_plant_losses = []
+    train_accuracy_prog = []
+    test_accuracy = []
+    test_losses = []
 
+    for epoch in range(test_config.epochs):  # run over a defined number of epochs
+        epoch_start_time = datetime.today()
+        print(f"epoch {epoch + 1}:", epoch_start_time, end = ' ')
+
+        # Setting the neural networks to train mode
         test_config.feat_ext.train()
         test_config.label_cls.train()
         test_config.plant_cls.train()
@@ -111,55 +155,124 @@ def train_loop(test_config: TestConfig):
         tot_label_loss = 0.
         tot_plant_loss = 0.
         tot_accuracy = 0.
+
+        # in the following line train invokes the iterator over the train loader
+        # this generates a single batch for every call
+        # if train_loader is empty it receives nothing. this should be checked here with an assert
+        # the call is to modalities __getitem__(self, idx) method
+
+        # the number 1 signifies that the iterable starts from 1
         for i, batch in enumerate(test_config.train_loader, 1):
             labels = batch['label'].to(test_config.device)
             plants = batch['plant'].to(test_config.device)
 
             x = batch.copy()
+            # print(' checking x none')
+            if x is None:
+                print(' x is None in x = batch.copy() at train loop  ')
+            # else:
+            #     print(' x is not none, x dictionary length is ', len(x))
 
+            # deleting label and plant number from tensor:
             del x['label']
             del x['plant']
 
             for key in x:
+                # print('key =', key, end='  ')
+                # print('x[key] image tensor to cuda device')
                 x[key] = x[key].to(test_config.device)
 
+            # zeroing all gradients so that they are recalculated per batch
             test_config.label_opt.zero_grad()
             test_config.plant_opt.zero_grad()
             test_config.ext_opt.zero_grad()
 
-            features: torch.Tensor = test_config.feat_ext(**x)
+            features: torch.Tensor = test_config.feat_ext(**x)  # applying the feature extractor for the batch
             features_plants = features.clone()
+            '''tensor.clone()creates a copy of tensor that imitates the original tensor's requires_grad field.'''
+
+            # -- domain adaptation --  as reference for the following part the following makes the gradients of the
+            # plant feature extractor get multiplied by lambda with a minus sign setting this to negative makes plant
+            # optimization and label optimization work in opposing directions
             features_plants.register_hook(lambda grad: -test_config.domain_adapt_lr * grad)
 
-            label_out = test_config.label_cls(features)
-            label_loss = test_config.criterion(label_out, labels)
+            # label_out = forward through
+            label_out = test_config.label_cls(features)  # training dataset labels are infered from the net
+            label_loss = test_config.criterion(label_out,
+                                               labels)  # infered labels and original labels are sent to the loss criterion
 
-            plant_out = test_config.plant_cls(features_plants)
-            plant_loss = test_config.criterion(plant_out, plants)
-            (label_loss + plant_loss).backward()
+            plant_out = test_config.plant_cls(
+                features_plants)  # training dataset plant classification is inferred from the net
+            plant_loss = test_config.criterion(plant_out,
+                                               plants)  # inferred plant classification and original plant names are 
+            #                                              sent to the loss criterion 
+            (
+                    label_loss + plant_loss).backward()  # backward propagation for both label classification and
+            #                                               plant classification (opposite directions) 
 
-            equality = (labels.data == label_out.max(dim=1)[1])
-            tot_accuracy += equality.float().mean()
+            equality = (labels.data == label_out.max(dim=1)[1])  # finds out which labels are equal
+            tot_accuracy += equality.float().mean()  # sums up batch label correct inferences
 
-            test_config.label_opt.step()
+            # Optimizers implement a step() method, that updates the parameters.
+            test_config.label_opt.step()  # updating label parameters
             test_config.ext_opt.step()
             test_config.plant_opt.step()
 
-            tot_label_loss += label_loss.item()
-            tot_plant_loss += plant_loss.item()
+            tot_label_loss += label_loss.item()  # batch label loss sum
+            tot_plant_loss += plant_loss.item()  # batch plant loss sum
 
-            num_print = 24
-            if i % num_print == 0 or i * test_config.batch_size == len(test_config.train_set):
-                num_since_last = num_print if i % num_print == 0 else i % num_print
-                print(f"\t{i}. label loss: {tot_label_loss / num_since_last}")
-                print(f"\t{i}. plant loss: {tot_plant_loss / num_since_last}")
-                print(f"\t{i}. accuracy: {tot_accuracy / num_since_last}")
+            # num_print = 24
+            # if i % num_print == 0 or i * test_config.batch_size == len(test_config.train_set):
+            #     num_since_last = num_print if i % num_print == 0 else i % num_print
+            #     print(f"\tbatch {i}. label loss: %8.3f plant loss: %8.3f accuracy: %8.3f" %
+            #           ((tot_label_loss / num_since_last), (tot_plant_loss / num_since_last),
+            #            (tot_accuracy / num_since_last)))
+            batch_end_time = datetime.today()
+            ## End of Batch
 
-                tot_label_loss = 0.
-                tot_plant_loss = 0.
-                tot_accuracy = 0.
+        f = open(f"results_{experiment}.txt", "a+")
+        train_size = len(test_config.train_set)
+        a, b, c = tot_label_loss / train_size, tot_plant_loss / train_size, tot_accuracy / train_size
+        logging.info(f"\tepoch {epoch + 1}: label loss: %8.3f plant loss: %8.3f accuracy: %8.3f" % ((a), (b), (c)))
+        f.write(f"\tepoch {epoch + 1}: label loss: %8.3f plant loss: %8.3f accuracy: %8.3f \n" % ((a), (b), (c)))
+        f.close()
+        print(f"\t. label loss: %8.3f plant loss: %8.3f accuracy: %8.3f" % ((a), (b), (c)), end = ' ')
 
-        test_model(test_config)
+        train_label_losses.append(tot_label_loss / train_size)
+        train_plant_losses.append(tot_plant_loss / train_size)
+        train_accuracy_prog.append(tot_accuracy / train_size)  # meaning  = train accuracy progress
+
+        epoch_end_time = datetime.today()
+        print(f'time [hh:mm:sec] = {epoch_end_time - epoch_start_time}')
+        ## End of Epoch
+
+        test_acc, test_loss = test_model(test_config)
+        test_accuracy.append(test_acc)
+        test_losses.append(test_loss)
+    print('train_label_losses   :', train_label_losses)
+    print('train_plant_losses   :', train_plant_losses)
+    print('train_accuracy_prog  :', train_accuracy_prog)
+    print('Test acc  = ', test_acc)
+    print('Test Loss = ', test_loss)
+
+    f = open(f"results_{experiment}.txt", "a+")
+    f.write(f'train_label_losses   :')
+    f.write(" ".join(map(str, train_label_losses)))
+    f.write('train_plant_losses   :')
+    f.write(" ".join(map(str, train_plant_losses)))
+    f.write('train_accuracy_prog  :')
+    f.write(" ".join(map(str, train_accuracy_prog)))
+
+    f.close()
+
+    train_name: str = get_training_name(experiment, excluded_modalities)
+    fig = plt.figure(1)
+    plt.plot(train_label_losses, 'or')
+    fig.savefig(f'/home/pnn/PNN-AI/PNN-AI/train_results/{train_name}_label_losses2{datetime.date()}.png')
+
+    fig = plt.figure(2)
+    plt.plot(test_accuracy, 'ob')
+    fig.savefig(f'/home/pnn/PNN-AI/PNN-AI/train_results/{train_name}_test_accuracy2{datetime.date()}.png')
 
 
 def restore_checkpoint(test_config: TestConfig):
@@ -176,102 +289,101 @@ def restore_checkpoint(test_config: TestConfig):
     test_config.plant_cls = test_config.plant_cls.to(test_config.device)
 
 
-def main(args: argparse.Namespace):
-    checkpoint_name = get_checkpoint_name(args.experiment, args.excluded_modalities)
+def main():
+    print(' ----------------- inside main ------------------------------    ')
+    checkpoint_name = get_checkpoint_name(experiment, excluded_modalities)
 
-    # training hyper-parameters
-    epochs = args.epochs
-    batch_size = args.batch_size
-    label_lr = args.label_lr
-    plant_lr = args.plant_lr
-    extractor_lr = args.extractor_lr
-
-    domain_adapt_lr = args.domain_adapt_lr
+    # creating a results file, exactly one per run
+    f = open(f"results_{experiment}.txt", "w+")
+    # datetime of results file
+    now = datetime.now()
+    f.write('training start time :    ')
+    f.write(str(now))
+    f.write('\n')
+    # Read all parameters from parameters file and document in the logging 'training2.log' file
+    fread = open("/home/pnn/PNN/train/parameters.py", "r")
+    parameters = fread.read()
+    fread.close()
+    f.write(parameters)
+    f.write('--------------------------------------------------------------------------------------------\n')
+    f.close()
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    curr_experiment = experiments_info[args.experiment]
-    modalities = get_experiment_modalities_params(curr_experiment, args.lwir_skip, args.lwir_max_len, args.vir_max_len,
-                                                  args.color_max_len)
-    used_modalities = get_used_modalities(modalities, args.excluded_modalities)
+    curr_experiment = experiments_info[experiment]
 
-    if args.experiment_path is None:
-        experiment_path = args.experiment
-    else:
-        experiment_path = args.experiment_path
+    modalities = get_experiment_modalities_params(curr_experiment, lwir_skip, lwir_max_len, vir_max_len, color_max_len)
+    used_modalities = get_used_modalities(modalities, excluded_modalities)
 
     end_date = curr_experiment.end_date
-    if args.num_days is not None:
-        end_date = curr_experiment.start_date + timedelta(days=args.num_days-1)
+    if num_days is not None:
+        end_date = curr_experiment.start_date + timedelta(days=num_days - 1)
 
-    dataset = Modalities(experiment_path, args.experiment, split_cycle=args.split_cycle,
-                         start_date=curr_experiment.start_date, end_date=end_date, **used_modalities)
+    # print(' used_modalities    =  ',used_modalities)
+    print(' ****  dataset preparations *****')
 
-    train_set, test_set = ModalitiesSubset.random_split(dataset, args.train_ratio)
-    train_loader = data.DataLoader(train_set, batch_size=batch_size, num_workers=2, shuffle=True)
+    dataset = Modalities(experiment_path, experiment, split_cycle=split_cycle,
+                         start_date=curr_experiment.start_date,
+                         end_date=end_date,
+                         **used_modalities)
 
+    print(' **** Finished dataset preparations *****')
+    print('dataset[1] printed using the __get_item__ method ')
+    # print(dataset[1])
+    for key in dataset[1]:
+        if torch.is_tensor(dataset[1][key]):
+            print(key, dataset[1][key].size())
+        else:
+            print(key, dataset[1][key])
+
+    print('--------------------------------------------')
+
+    train_set, test_set = ModalitiesSubset.random_split(dataset, train_ratio)
+    train_loader = DataLoader(train_set, batch_size=batch_size, num_workers=0, pin_memory=True, shuffle=True)
+    print('------------------------------------------------------------------------------------')
+    print('len train_loader = ', len(train_loader))
+    print('------------------------------------------------------------------------------------')
+
+    print('used_modalities.keys()  = ', used_modalities.keys())
+
+    # creating feat_extractor_params
     feat_extractor_params = dict()
     for mod in used_modalities.keys():
         num_levels, kernel_size = get_levels_kernel(dataset.modalities[mod].max_len)
+        print('For mod =  ', mod, ' max len =', dataset.modalities[mod].max_len, '   num_levels  =  ', num_levels,
+              '  kernel_size  =  ', kernel_size)
         feat_extractor_params[mod] = {
             'num_levels': num_levels,
             'kernel_size': kernel_size
         }
+    print()
+    print('feat_extractor_params dictionary :')
+    print(yaml.dump(feat_extractor_params))
 
     feat_ext = FeatureExtractor(**feat_extractor_params).to(device)
-    label_cls = nn.Sequential(nn.ReLU(), nn.Linear(512, len(classes[args.experiment]))).to(device)
+    label_cls = nn.Sequential(nn.ReLU(), nn.Linear(512, len(classes[experiment]))).to(device)
     plant_cls = nn.Sequential(nn.ReLU(), nn.Linear(512, train_set.num_plants)).to(device)
 
     criterion = nn.CrossEntropyLoss(reduction='sum').to(device)
 
-    label_opt = optim.SGD(label_cls.parameters(), lr=label_lr, weight_decay=1e-3)
-    plant_opt = optim.SGD(plant_cls.parameters(), lr=plant_lr, weight_decay=1e-3)
-    ext_opt = optim.SGD(feat_ext.parameters(), lr=extractor_lr, weight_decay=1e-3)
+    label_opt = optim.SGD(label_cls.parameters(), lr=label_lr, momentum=0.7, weight_decay=1e-3)
+    plant_opt = optim.SGD(plant_cls.parameters(), lr=plant_lr, momentum=0.7, weight_decay=1e-3)
+    ext_opt = optim.SGD(feat_ext.parameters(), lr=extractor_lr, momentum=0.7, weight_decay=1e-3)
 
     best_loss = float('inf')
 
-    test_config = TestConfig(args.use_checkpoints, checkpoint_name, epochs, batch_size, domain_adapt_lr, device,
+    test_config = TestConfig(use_checkpoints, checkpoint_name, epochs, batch_size, domain_adapt_lr, device,
                              dataset, train_set, test_set, train_loader, feat_ext, label_cls, plant_cls, criterion,
-                             label_opt, plant_opt, ext_opt, best_loss, args.loss_delta, args.return_epochs)
+                             label_opt, plant_opt, ext_opt, best_loss, loss_delta, return_epochs)
 
-    if args.load_checkpoint:
+    if load_checkpoint:
         restore_checkpoint(test_config)
 
     train_loop(test_config)
 
-    if args.use_checkpoints:
+    if use_checkpoints:
         restore_checkpoint(test_config)
 
 
 if __name__ == '__main__':
-    mods = get_all_modalities()
-    parser = argparse.ArgumentParser(description='Run the train loop.')
-    parser.add_argument('-c', '--disable_checkpoints', dest='use_checkpoints', action='store_false', default=True,
-                        help='Flag for disabling checkpoints in the training.')
-    parser.add_argument('-l', '--load_checkpoint', dest='load_checkpoint', action='store_true', default=False,
-                        help='Flag for loading the checkpoint from the previous training.')
-    parser.add_argument('--exclude_modalities', '--exclude', dest='excluded_modalities', nargs='*', choices=mods,
-                        default=[], help=f"All of the modalities that you don't want to use. Choices are: {mods}")
-    parser.add_argument('--epochs', dest='epochs', default=25, type=int,
-                        help='The number of epochs used in the training.')
-    parser.add_argument('--domain_adapt_lr', dest='domain_adapt_lr', type=float, default=1e-2,
-                        help='The coefficient used in the domain adaptation.')
-    parser.add_argument('--label_lr', dest='label_lr', type=float, default=1e-2,
-                        help='The learning rate for the phenotype classifier.')
-    parser.add_argument('--plant_lr', dest='plant_lr', type=float, default=1e-2,
-                        help='The learning rate for the plant classifier used in the transfer learning.')
-    parser.add_argument('--extractor_lr', dest='extractor_lr', type=float, default=1e-2,
-                        help='The learning rate for the feature extractor.')
-    parser.add_argument('-t', '--train_ratio', dest='train_ratio', type=float, default=5 / 6,
-                        help='The ratio of the dataset that will be used for training.')
-    parser.add_argument('-b', '--batch_size', dest='batch_size', type=int, default=4,
-                        help='The batch size for the training.')
-    parser.add_argument('--loss_delta', dest='loss_delta', type=float, default=0.0,
-                        help='The minimum amount above the best loss that would still have the model saved.')
-    parser.add_argument('--return_epochs', dest='return_epochs', type=int, default=0,
-                        help="""Number of epochs without improvement (includeing loss_delta)
-                        after which we return to the best checkpoint. Value of 0 disables this (default value).""")
-    add_experiment_dataset_arguments(parser)
-
-    arguments = parser.parse_args()
-    main(arguments)
+    main()
