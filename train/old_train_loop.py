@@ -2,7 +2,9 @@ from torch import nn, optim
 from torch.utils import data
 from datetime import timedelta
 
-from datasets import Modalities, ModalitiesSubset, classes
+from sklearn.model_selection import train_test_split
+
+from datasets import Modalities, ModalitiesSubset, classes, labels
 from datasets.transformations import *
 from datasets.experiments import get_experiment_modalities_params, experiments_info, get_all_modalities
 from model import PlantFeatureExtractor as FeatureExtractor
@@ -15,8 +17,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import draw, show
 
-# SKLearn -
+# Confusion Matrix -
 from sklearn.metrics import confusion_matrix
+import numpy as np
+import seaborn
+
 
 # define test config
 class TestConfig:
@@ -47,6 +52,77 @@ class TestConfig:
         self.epochs_without_improvement = 0
 
 
+def confusion_matrix(test_config: TestConfig, experiment):
+    test_loader = data.DataLoader(test_config.test_set, batch_size=test_config.batch_size, num_workers=2, shuffle=True)
+
+    confusion = 0  # stam for the return
+
+    classesExp = classes[experiment]
+    temp = len(classesExp)
+    confMatrix = np.zeros([temp, temp])
+
+    test_config.feat_ext.eval()
+    test_config.label_cls.eval()
+    test_config.plant_cls.eval()
+
+    with torch.no_grad():
+        for batch in test_loader:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            labels = batch['label'].to(test_config.device)
+
+            x = batch.copy()
+
+            del x['label']
+            del x['plant']
+
+            for key in x:
+                x[key] = x[key].to(test_config.device)
+
+            features: torch.Tensor = test_config.feat_ext(**x)
+            label_out = test_config.label_cls(features)
+            y = labels.data.tolist()
+            y_hat = label_out.max(dim=1)[1].tolist()
+
+            for yi, y_hati in zip(y, y_hat):
+                confMatrix[yi, y_hati] += 1
+
+    print()
+    print('Simple not normalized confusion matrix')
+    print()
+    print(confMatrix)
+
+    '''
+    Plot confusion matrix using heatmap.
+
+        Args:
+            data (list of list): List of lists with confusion matrix data.
+            labels (list): Labels which will be plotted across x and y axis.
+            output_filename (str): Path to output file.
+
+    '''
+    seaborn.set(color_codes=True)
+    plt.figure(3, figsize=(9, 6))
+
+    plt.title("Confusion Matrix")
+
+    seaborn.set(font_scale=1.4)
+    ax = seaborn.heatmap(confMatrix, annot=True, cmap="YlGnBu", cbar_kws={'label': 'Scale'})
+
+    ax.set_xticklabels(classes['Exp0'])
+    ax.set_yticklabels(classes['Exp0'])
+
+    ax.set(ylabel="True Label", xlabel="Predicted Label")
+
+    # plt.savefig(output_filename, bbox_inches='tight', dpi=300)
+    plt.draw()
+    plt.show()
+
+    # TODO: Normalized Confusion Matrix
+
+    return confusion
+
+
 def test_model(test_config: TestConfig):
     test_loader = data.DataLoader(test_config.test_set, batch_size=test_config.batch_size, num_workers=2, shuffle=True)
 
@@ -74,7 +150,7 @@ def test_model(test_config: TestConfig):
             label_out = test_config.label_cls(features)
             label_loss = test_config.criterion(label_out, labels)
 
-            equality = (labels.data == label_out.max(dim=1)[1]) # Accumulate values here to create the confusion matrix
+            equality = (labels.data == label_out.max(dim=1)[1])
             tot_correct += equality.float().sum().item()
             tot_label_loss += label_loss.item()
 
@@ -180,13 +256,15 @@ def train_loop(test_config: TestConfig):
 
     fig = plt.figure(2)
     plt.plot(train_label_losses, 'or', label='train label loss')
-    plt.plot(train_plant_losses, 'ob',  label='train plant loss')
-    plt.plot(test_losses, 'og',  label='test label loss')
+    plt.plot(train_plant_losses, 'ob', label='train plant loss')
+    plt.plot(test_losses, 'og', label='test label loss')
     plt.title('Train and Test Losses')
     plt.legend(title='Parameters')
     # plt.xlabel('x label')
     # plt.ylabel('y label')
     show()
+
+    confusion_matrix(test_config, parameters.experiment)
 
 
 def restore_checkpoint(test_config: TestConfig):
@@ -223,10 +301,46 @@ def main():
     if parameters.num_days is not None:
         end_date = curr_experiment.start_date + timedelta(days=parameters.num_days - 1)
 
+    print(' CREATING AND PRINTING THE DATASET   ')
     dataset = Modalities(experiment_path, parameters.experiment, split_cycle=parameters.split_cycle,
                          start_date=curr_experiment.start_date, end_date=end_date, **used_modalities)
 
+    targets = [dataset[i]['label'] for i in range(len(dataset))]
+
+    print('===================')
+    print('targets   =  \n', targets)
+
+    # TODO: ModalitiesSubset - change this one to stratified shuffle split, data should be balanced over labels
     train_set, test_set = ModalitiesSubset.random_split(dataset, parameters.train_ratio)
+
+    train_labels = [train_set[i]['label'] for i in range(len(train_set))]
+    test_labels = [test_set[i]['label'] for i in range(len(test_set))]
+
+    print('train_labels   =  \n', train_labels)
+
+    print('test_labels   =  \n', test_labels)
+    print('===================')
+
+    fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=(5, 15))
+    fig.suptitle('amounts of genotypes per set')
+    keys, counts = np.unique(targets, return_counts=True)
+    ax1.bar(keys, counts)
+    keys, counts = np.unique(train_labels, return_counts=True)
+    ax2.bar(keys, counts)
+    keys, counts = np.unique(test_labels, return_counts=True)
+    ax3.bar(keys, counts)
+    ax1.set_title('dataset')
+    ax2.set_title('train set')
+    ax3.set_title('test set')
+    ax1.set_ylabel('number of elements')
+    ax2.set_ylabel('number of elements')
+    ax3.set_ylabel('number of elements')
+    ax1.set_xlabel('classes')
+    ax2.set_xlabel('classes')
+    ax3.set_xlabel('classes')
+    plt.draw()
+    plt.show()  # TODO: tried to use plt.show(block=False) but it did not show the chart
+
     train_loader = data.DataLoader(train_set, batch_size=parameters.batch_size, num_workers=2, shuffle=True)
 
     feat_extractor_params = dict()
@@ -243,9 +357,9 @@ def main():
 
     criterion = nn.CrossEntropyLoss(reduction='sum').to(device)
 
-    label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, momentum=0.9, weight_decay=1e-3)
+    label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, momentum=0.7, weight_decay=1e-3)
     plant_opt = optim.SGD(plant_cls.parameters(), lr=parameters.plant_lr, momentum=0.9, weight_decay=1e-3)
-    ext_opt = optim.SGD(feat_ext.parameters(), lr=parameters.extractor_lr, momentum=0.9, weight_decay=1e-3)
+    ext_opt = optim.SGD(feat_ext.parameters(), lr=parameters.extractor_lr, momentum=0.7, weight_decay=1e-3)
 
     best_loss = float('inf')
 
