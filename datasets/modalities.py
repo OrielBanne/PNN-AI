@@ -1,13 +1,20 @@
+########################################################################################################
+#                                                                                                      #
+#                                  MODALITIES                                                          #
+#                                                                                                      #
+########################################################################################################
 
-from datetime import datetime
 from torch.utils import data
 from typing import Dict, List
 from sklearn.model_selection import train_test_split
-import numpy as np
+from sklearn.model_selection import StratifiedKFold
+
 
 from . import LWIR, VIR577nm, VIR692nm, VIR732nm, VIR970nm, VIRPolar, VIRPolarA, VIRNoFilter, Color
 from .labels import labels
+from train import parameters
 
+import numpy as np
 
 mod_map = {
     'lwir': LWIR,
@@ -22,13 +29,18 @@ mod_map = {
 }
 
 
+#           MODALITIES
+
 class Modalities(data.Dataset):
     """
     A dataset class that lets the user decides which modalities to use.
     """
 
-    def __init__(self, root_dir: str, exp_name: str, *mods: str, split_cycle=7,
-                 start_date=datetime(2019, 6, 4), end_date=datetime(2019, 7, 7),
+    def __init__(self, root_dir: str,
+                 exp_name: str,
+                 split_cycle=parameters.split_cycle,
+                 start_date=parameters.start_date,
+                 end_date=parameters.end_date,
                  transform=None, **k_mods: Dict):
         """
         :param root_dir: path to the experiment directory
@@ -38,26 +50,24 @@ class Modalities(data.Dataset):
         :param transform: optional transform to be applied on a sample
         :param k_mods: modalities to be in the dataset, as dictionaries of initialization arguments
         """
-        if len(mods) + len(k_mods) == 0:
+
+        if len(k_mods) == 0:
+            print('k_mods length was zero')
             mods = mod_map.keys()
 
+        print('creating self.modalities')
         self.modalities = dict()
 
-        for mod in mods:
-            self.modalities[mod] = mod_map[mod](root_dir=root_dir, exp_name=exp_name, split_cycle=split_cycle,
-                                                start_date=start_date, end_date=end_date)
-
         for mod in k_mods:
+            print('@Modalities, mod: ', mod, end='')
             self.modalities[mod] = mod_map[mod](root_dir=root_dir, exp_name=exp_name, split_cycle=split_cycle,
-                                                start_date=start_date, end_date=end_date, **k_mods[mod])
+                                                start_date=start_date, end_date=end_date, **(k_mods[mod]))
 
         self.transform = transform
-
         self.exp_name = exp_name
-
         self.split_cycle = split_cycle
-
         self.num_plants = len(labels[exp_name])
+        print('self.num_plants is    :', self.num_plants)
 
     def __len__(self):
         dataset = next(iter(self.modalities.values()))
@@ -73,11 +83,13 @@ class Modalities(data.Dataset):
         sample['label'] = labels[self.exp_name][plant]
         sample['plant'] = plant
 
-        if self.transform:
+        if self.transform:  # check this part not sure it works
             sample = self.transform(sample)
 
         return sample
 
+
+#     MODALITIES SUBSET
 
 class ModalitiesSubset(data.Dataset):
     def __init__(self, modalities: Modalities, plants: List[int]):
@@ -99,13 +111,27 @@ class ModalitiesSubset(data.Dataset):
         return data
 
     @staticmethod
-    def random_split(modalities: Modalities, train_ratio: float):
+    def random_split(modalities: Modalities):
         indices = np.arange(modalities.num_plants)
         plant_labels = np.asarray(labels[modalities.exp_name])
 
-        train_indices, test_indices = train_test_split(indices, train_size=train_ratio, stratify=plant_labels)
+        #  https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+        train_indices, test_indices = train_test_split(indices, train_size=parameters.train_ratio, stratify=plant_labels)
 
         return ModalitiesSubset(modalities, train_indices), ModalitiesSubset(modalities, test_indices)
+
+    @staticmethod  # A generator
+    def cross_validation(modalities: Modalities):
+        # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+        n_plants = len(labels[parameters.experiment])
+        n_classes = len(np.unique(labels[parameters.experiment]))
+        n_splits = int(n_plants/n_classes)
+        X = tuple(i for i in range(n_plants))  # Plants by order
+        y = np.array(labels[parameters.experiment])
+        skf = StratifiedKFold(n_splits=n_splits)
+        skf.get_n_splits(X, y)
+        for train, test in skf.split(X, y):
+            yield ModalitiesSubset(modalities, train), ModalitiesSubset(modalities, test)
 
     @staticmethod
     def leave_one_out(modalities: Modalities, plant_idx: int):
