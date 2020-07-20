@@ -69,6 +69,16 @@ def get_experiment_modalities(exp_name: str):
     return list(experiments_info[exp_name].modalities_norms.keys())
 
 
+'''
+Exp0 :  start_date = datetime(2019, 6, 4)   end_date = datetime(2019, 7, 7)
+Exp1 :  start_date = datetime(2019, 7, 28)  end_date   = datetime(2019, 8, 4)
+Exp2 :  start_date = datetime(2019, 9, 20)  end_date   = datetime(2019, 10, 13)
+Exp3 :  start_date = datetime(2019, 10, 28) end_date = datetime(2019, 11, 5)
+start_date = datetime(2019, 11, 5)  # plates were placed the morning of the 10 29th
+end_date   = datetime(2019, 12, 7)
+end_date = datetime(2019, 11, 19)  # plants start invading each others cut for rgb
+'''
+
 experiments_info: Dict[str, ExpInfo] = {
     'Exp0': ExpInfo(
         datetime(2019, 6, 5),

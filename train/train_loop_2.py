@@ -10,13 +10,13 @@ from model import PlantFeatureExtractor as FeatureExtractor
 from train.utils import get_checkpoint_name, get_used_modalities, get_levels_kernel, get_training_name
 from train import parameters  # importing all parameters/home/pnn/PNN/train
 
-# imports for plotting
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import draw, show
 
 from sklearn.metrics import confusion_matrix
 import numpy as np
 import seaborn
+
+from yaml import dump
 
 
 class TestConfig:
@@ -55,14 +55,12 @@ def unique(list1):
 def confusion_matrix(test_config: TestConfig, run):
     test_loader = data.DataLoader(test_config.test_set, batch_size=test_config.batch_size, num_workers=2, shuffle=True)
 
-    confusion = 0  # stam for the return
-
-    classesExp = classes[parameters.experiment]
+    classes_exp = classes[parameters.experiment]
     print('----------------------------------------------------')
-    print('experiment = ', parameters.experiment, 'classes = ', classesExp)
+    print('experiment = ', parameters.experiment, 'classes = ', classes_exp)
     print('----------------------------------------------------')
-    temp = len(classesExp)
-    confMatrix = np.zeros([temp, temp])
+    temp = len(classes_exp)
+    conf_matrix = np.zeros([temp, temp])
 
     test_config.feat_ext.eval()
     test_config.label_cls.eval()
@@ -88,12 +86,12 @@ def confusion_matrix(test_config: TestConfig, run):
             y_hat = label_out.max(dim=1)[1].tolist()
 
             for yi, y_hati in zip(y, y_hat):
-                confMatrix[yi, y_hati] += 1
+                conf_matrix[yi, y_hati] += 1
 
     print()
     print('Simple not normalized confusion matrix')
     print()
-    print(confMatrix)
+    print(conf_matrix)
 
     '''
     Plot confusion matrix using heatmap.
@@ -108,10 +106,10 @@ def confusion_matrix(test_config: TestConfig, run):
     # plt.figure(4+run, figsize=(9, 6))
     plt.figure(figsize=(9, 6))
 
-    plt.title("Confusion Matrix")
+    plt.title(f"{parameters.experiment} Confusion Matrix")
 
     seaborn.set(font_scale=1.4)
-    ax = seaborn.heatmap(confMatrix, annot=True, cmap="YlGnBu", cbar_kws={'label': 'Scale'})
+    ax = seaborn.heatmap(conf_matrix, annot=True, cmap="YlGnBu", cbar_kws={'label': 'Scale'})
 
     ax.set_xticklabels(classes[parameters.experiment])
     ax.set_yticklabels(classes[parameters.experiment])
@@ -127,7 +125,7 @@ def confusion_matrix(test_config: TestConfig, run):
 
     # TODO: Normalized Confusion Matrix
 
-    return confusion
+    return conf_matrix
 
 
 def test_model(test_config: TestConfig):
@@ -163,7 +161,7 @@ def test_model(test_config: TestConfig):
 
     accuracy = tot_correct / len(test_config.test_set)  # Total Test Accuracy
     loss = tot_label_loss / len(test_config.test_set)  # Total Test Loss calculated
-    print(f'\t       %8.3f  \t        %8.3f' % (loss, accuracy))
+    print(f'\t       %8.3f  \t   %8.3f' % (loss, accuracy))
 
     if test_config.use_checkpoints and loss < test_config.best_loss + test_config.loss_delta:
         test_config.best_loss = min(loss, test_config.best_loss)
@@ -193,8 +191,7 @@ def train_loop(test_config: TestConfig,
                test_accuracy,
                test_losses,
                run):
-
-    print('  Train:  label loss:         plant loss:         accuracy:    Test: Label loss    accuracy  ')
+    print('  Train:  label loss:       plant loss:      accuracy:    Test: Label loss     accuracy  ')
     for epoch in range(test_config.epochs):
         print(f'epoch {epoch + 1}:', end=' ')
 
@@ -244,7 +241,7 @@ def train_loop(test_config: TestConfig,
 
         train_size = len(test_config.train_set)
         a, b, c = tot_label_loss / train_size, tot_plant_loss / train_size, tot_accuracy / train_size
-        print(f'   %8.3f        %8.3f         %8.3f' % ((a), (b), (c)), end=' ')
+        print(f'   %8.3f        %8.3f         %8.3f' % (a, b, c), end=' ')
 
         train_label_losses.append(a)
         train_plant_losses.append(b)
@@ -255,32 +252,35 @@ def train_loop(test_config: TestConfig,
         test_losses.append(test_loss)
 
     train_name: str = get_training_name(parameters.experiment, parameters.excluded_modalities)
+
+    # plot accuracies
     # plt.figure(2+run)
     plt.figure()
     plt.plot(train_accuracy_prog, 'or', label='train accuracy')
     plt.plot(test_accuracy, 'ob', label='test accuracy')
     plt.legend(title='Parameters')
-    plt.title('Train and Test Accuracy')
+    plt.title(f'{parameters.experiment} Train and Test Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.savefig(f'/home/pnn/PNN/Results/{train_name}_accuracy_{datetime.date(datetime.now())}_run_{run}.png')
     plt.close()
 
+    # plot losses
     # plt.figure(3+run)
     plt.figure()
     plt.plot(train_label_losses, 'or', label='train label loss')
     plt.plot(train_plant_losses, 'ob', label='train plant loss')
     plt.plot(test_losses, 'og', label='test label loss')
-    plt.title('Train and Test Losses')
+    plt.title(f'{parameters.experiment} Train and Test Losses')
     plt.legend(title='Parameters')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.savefig(f'/home/pnn/PNN/Results/{train_name}_loss_{datetime.date(datetime.now())}_run_{run}.png')
     plt.close()
 
-    confusion_matrix(test_config, run)
+    conf_matrix = confusion_matrix(test_config, run)
 
-    return train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses
+    return train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix
 
 
 def restore_checkpoint(test_config: TestConfig):
@@ -318,9 +318,14 @@ def main():
         end_date = curr_experiment.start_date + timedelta(days=parameters.num_days - 1)
 
     print(' CREATING AND PRINTING THE DATASET   ')
-    dataset = Modalities(experiment_path, parameters.experiment, split_cycle=parameters.split_cycle,
-                         start_date=curr_experiment.start_date, end_date=end_date, **used_modalities)
+    dataset = Modalities(experiment_path,
+                         parameters.experiment,
+                         split_cycle=parameters.split_cycle,
+                         start_date=curr_experiment.start_date,
+                         end_date=end_date,
+                         **used_modalities)
 
+    print(dump(dataset))
     # TODO: automate a change in the class labels to enumerate from 0 to len(classes)
     targets = [dataset[i]['label'] for i in range(len(dataset))]
     class_numbers = unique(targets)
@@ -333,6 +338,7 @@ def main():
     val_losses = []
     # train_set, test_set = ModalitiesSubset.random_split(dataset)
     run = 0
+    conf = []
     for train_set, test_set in ModalitiesSubset.cross_validation(dataset):
 
         train_labels = [train_set[i]['label'] for i in range(len(train_set))]
@@ -340,10 +346,8 @@ def main():
 
         print('train_labels : ', train_labels)
         print('train_set : ', train_set.plants)
-
         print('test_labels : ', test_labels)
         print('test_set : ', test_set.plants)
-
         print('classes {}  = '.format(parameters.experiment), classes[parameters.experiment])
 
         # TODO: if all counts for all keys in each group are equal - just print ok, no need for the charts,
@@ -369,11 +373,8 @@ def main():
 
         train_name: str = get_training_name(parameters.experiment, parameters.excluded_modalities)
         plt.savefig(f'/home/pnn/PNN/Results/{train_name}_balanced_{datetime.date(datetime.now())}_run_{run}.png',
-                    dpi=None, facecolor='w', edgecolor='w',
-                    orientation='portrait', papertype=None, format=None,
-                    transparent=False, bbox_inches=None, pad_inches=0.1,
-                    frameon=None, metadata=None)
-        # plt.show()  show# TODO: tried to use plt.show(block=False) but it did not show the chart
+                    dpi=None, facecolor='w', edgecolor='w', orientation='portrait', papertype=None, format=None,
+                    transparent=False, bbox_inches=None, pad_inches=0.1, metadata=None)
 
         train_loader = data.DataLoader(train_set, batch_size=parameters.batch_size, num_workers=2, shuffle=True)
 
@@ -386,20 +387,48 @@ def main():
             }
 
         feat_ext = FeatureExtractor(**feat_extractor_params).to(device)
-        label_cls = nn.Sequential(nn.ReLU(), nn.Linear(512, len(classes[parameters.experiment]))).to(device)
-        plant_cls = nn.Sequential(nn.ReLU(), nn.Linear(512, train_set.num_plants)).to(device)
+        # because the criterion is cross entropy which in pytorch includes softmax,
+        # there's no need for softmax layer as last layer in the net below (nn.Softmax(dim=1))
+        # label_cls = nn.Sequential(
+        #     nn.ReLU(),
+        #     nn.Linear(parameters.net_features_dim, len(classes[parameters.experiment]))
+        # ).to(device)
+        # plant_cls = nn.Sequential(
+        #     nn.ReLU(),
+        #     nn.Linear(parameters.net_features_dim, train_set.num_plants)
+        # ).to(device)
+
+        # For Dropout:
+        label_cls = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(parameters.net_features_dim, len(classes[parameters.experiment])),
+            nn.Dropout(p=0.35, inplace=False)
+        ).to(device)
+        plant_cls = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(parameters.net_features_dim, train_set.num_plants),
+            nn.Dropout(p=0.35, inplace=False)
+        ).to(device)
 
         criterion = nn.CrossEntropyLoss(reduction='sum').to(device)
 
-        label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, weight_decay=1e-3)  # , momentum=0.7
-        plant_opt = optim.SGD(plant_cls.parameters(), lr=parameters.plant_lr, weight_decay=1e-3)  # momentum=0.9,
-        ext_opt = optim.SGD(feat_ext.parameters(), lr=parameters.extractor_lr, weight_decay=1e-3)  # momentum=0.7,
+        if parameters.optimizer == 'SGD':
+            label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, weight_decay=1e-3)  # , momentum=0.7
+            plant_opt = optim.SGD(plant_cls.parameters(), lr=parameters.plant_lr, weight_decay=1e-3)  # momentum=0.9,
+            ext_opt = optim.SGD(feat_ext.parameters(), lr=parameters.extractor_lr, weight_decay=1e-3)  # momentum=0.7,
+        elif parameters.optimizer == 'Adam':
+            label_opt = optim.Adam(label_cls.parameters(), lr=parameters.label_lr_Adam, betas=(0.9, 0.999),
+                                   eps=1e-08, weight_decay=1e-3, amsgrad=False)
+            plant_opt = optim.Adam(plant_cls.parameters(), lr=parameters.plant_lr_Adam, betas=(0.9, 0.999),
+                                   eps=1e-08, weight_decay=1e-3, amsgrad=False)
+            ext_opt = optim.Adam(feat_ext.parameters(), lr=parameters.extractor_lr_Adam, betas=(0.9, 0.999),
+                                 eps=1e-08, weight_decay=1e-3, amsgrad=False)
 
         best_loss = float('inf')
 
-        test_config = TestConfig(parameters.use_checkpoints, checkpoint_name, parameters.epochs, parameters.batch_size,
-                                 parameters.domain_adapt_lr, device, dataset, train_set, test_set, train_loader,
-                                 feat_ext,
+        test_config = TestConfig(parameters.use_checkpoints, checkpoint_name, parameters.epochs,
+                                 parameters.batch_size, parameters.domain_adapt_lr, device, dataset,
+                                 train_set, test_set, train_loader, feat_ext,
                                  label_cls, plant_cls, criterion, label_opt, plant_opt, ext_opt, best_loss,
                                  parameters.loss_delta, parameters.return_epochs)
 
@@ -411,7 +440,7 @@ def main():
         train_accuracy_prog = []
         test_accuracy = []
         test_losses = []
-        train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses = train_loop(
+        train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix = train_loop(
             test_config,
             train_label_losses,
             train_plant_losses,
@@ -425,26 +454,68 @@ def main():
         t_accuracy_prog.append(train_accuracy_prog)
         val_accuracy.append(test_accuracy)
         val_losses.append(test_losses)
+        conf.append(conf_matrix)
 
         if parameters.use_checkpoints:
             restore_checkpoint(test_config)
 
         run += 1
 
-    print('t_label_losses  = ', end='')
-    print(t_label_losses)
+    print('t_label_losses  = ', t_label_losses)
+    print('t_plant_losses = ', t_plant_losses)
+    print('t_accuracy_prog = ', t_accuracy_prog)
+    print('val_accuracy = ', val_accuracy)
+    print('val_losses = ', val_losses)
+    print('confusion matrix sum :')
+    conf_sum = sum(c for c in conf)
+    conf_sum = conf_sum / run
+    print(conf_sum)
 
-    print('t_plant_losses = ', end='')
-    print(t_plant_losses)
+    val_losses_avg = np.mean(val_losses, axis=0)
+    val_accuracy_avg = np.mean(val_accuracy, axis=0)
+    t_accuracy_avg = np.mean(t_accuracy_prog, axis=0)
+    t_plant_loss_avg = np.mean(t_plant_losses, axis=0)
+    t_label_losses_avg = np.mean(t_label_losses, axis=0)
 
-    print('t_accuracy_prog = ', end='')
-    print(t_accuracy_prog)
+    train_name: str = get_training_name(parameters.experiment, parameters.excluded_modalities)
 
-    print('val_accuracy = ', end='')
-    print(val_accuracy)
+    # plot accuracies
+    plt.figure()
+    plt.plot(t_accuracy_avg, 'or', label='avg train accuracy')
+    plt.plot(val_accuracy_avg, 'ob', label='avg validation accuracy')
+    plt.legend(title='Parameters')
+    plt.title(f'{parameters.experiment} Train and Validation Avg Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.savefig(f'/home/pnn/PNN/Results/{train_name}_AVG_accuracy_{datetime.date(datetime.now())}_run_{run}.png')
+    plt.close()
 
-    print('val_losses = ', end='')
-    print(val_losses)
+    # plot losses
+    plt.figure()
+    plt.plot(t_label_losses_avg, 'or', label='avg train label loss')
+    plt.plot(t_plant_loss_avg, 'ob', label='avg train plant loss')
+    plt.plot(val_losses_avg, 'og', label='avg validation label loss')
+    plt.title(f'{parameters.experiment} Train and Validation Avg Losses')
+    plt.legend(title='Parameters')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.savefig(f'/home/pnn/PNN/Results/{train_name}_AVG_loss_{datetime.date(datetime.now())}_run_{run}.png')
+    plt.close()
+
+    # plot confusion matrix summary
+    seaborn.set(color_codes=True)
+    plt.figure(figsize=(9, 6))
+    plt.title(f'{parameters.experiment} Confusion Matrix Summary')
+    seaborn.set(font_scale=1.4)
+    ax = seaborn.heatmap(conf_sum, annot=True, cmap="YlGnBu", cbar_kws={'label': 'Scale'})
+    ax.set_xticklabels(classes[parameters.experiment])
+    ax.set_yticklabels(classes[parameters.experiment])
+    ax.set(ylabel="True Label", xlabel="Predicted Label")
+    train_name: str = get_training_name(parameters.experiment, parameters.excluded_modalities)
+    plt.savefig(f'/home/pnn/PNN/Results/{train_name}_confusion_summary_{datetime.date(datetime.now())}_run_{run}.png',
+                bbox_inches='tight',
+                dpi=300)
+    plt.close()
 
 
 if __name__ == '__main__':

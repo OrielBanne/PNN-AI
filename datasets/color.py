@@ -1,17 +1,27 @@
-from datetime import datetime
 import glob
+
+'''
+The glob module finds all the path-names matching a specified pattern according to the rules used by the Unix shell, 
+although results are returned in arbitrary order. No tilde expansion is done, but *, ?, and character ranges expressed 
+with [] will be correctly matched. This is done by using the os.listdir() and fnmatch.fnmatch() functions in concert, 
+and not by actually invoking a sub-shell. Note that unlike fnmatch.fnmatch(), glob treats file-names beginning with a 
+dot (.) as special cases. (For tilde and shell variable expansion, use os.path.expanduser() and os.path.expandvars().)
+
+
+For a literal match, wrap the meta-characters in brackets. For example, '[?]' matches the character '?'.
+
+'''
 from PIL import Image
 from torchvision.transforms import ToTensor
 
-from .exceptions import *
 from .experiments import plant_positions
-from .ModalityDataset import ModalityDataset
+from .ModalityDataset import ModalityDataset, DirEmptyError
+from train.parameters import *  # importing all parameters
 
 
 class Color(ModalityDataset):
     def __init__(self, root_dir: str, exp_name: str, img_len: int = 255, split_cycle=7,
-                 start_date=datetime(2019, 6, 4), end_date=datetime(2019, 7, 7),
-                 max_len=None, transform=None):
+                 start_date=start_date, end_date=end_date, max_len=None, transform=None):
         super().__init__(root_dir, exp_name, 'D465_Color', img_len, plant_positions[exp_name].color_positions,
                          split_cycle, start_date, end_date, 1, max_len, transform)
 

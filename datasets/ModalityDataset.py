@@ -5,19 +5,18 @@
 ########################################################################################################
 
 
-from datetime import datetime
 import glob
+from abc import abstractmethod
+
 import torch
 from torch.utils import data
 from torchvision import transforms
-from abc import abstractmethod
 from typing import Tuple
-import matplotlib.pyplot as plt
 
 from .labels import labels
-# from .exceptions import *
 from .transformations import RandomPNNTransform
-from train.parameters import *  # importing all parameters
+from train import parameters
+from datetime import datetime
 
 
 # just checking DirEmptyError
@@ -31,8 +30,8 @@ class ModalityDataset(data.Dataset):
     """
 
     def __init__(self, root_dir: str, exp_name: str, directory_suffix: str, img_len: int,
-                 positions: Tuple[Tuple[int, int], ...], split_cycle=7, start_date=start_date,
-                 end_date=end_date, skip=1, max_len=None, transform=None):
+                 positions: Tuple[Tuple[int, int], ...], split_cycle=7, start_date=parameters.start_date,
+                 end_date=parameters.end_date, skip=1, max_len=None, transform=None):
         """
         :param root_dir: path to the experiment directory
         :param exp_name: the experiment we want to use
@@ -98,8 +97,8 @@ class ModalityDataset(data.Dataset):
         cycles_dirs = [sum(days_dirs[idx::split_cycle], []) for idx in range(split_cycle)]
         return [cycle_dirs[::skip] for cycle_dirs in cycles_dirs]
 
-    def __filter_dirs(self, dirs, start_date, end_date):
-        return [d for d in dirs if start_date <= self.__get_dir_date(d) <= end_date and self._dir_has_file(d)]
+    def __filter_dirs(self, dirs, start_d, end_d):
+        return [d for d in dirs if start_d <= self.__get_dir_date(d) <= end_d and self._dir_has_file(d)]
 
     def __len__(self):
         return self.num_plants * self.split_cycle
@@ -115,7 +114,6 @@ class ModalityDataset(data.Dataset):
         tensors = []
 
         for directory in self.cycles_dirs[cycle_day]:
-            # print('Directory  : ', directory)
             try:
                 image = self._get_image(directory, self.positions[plant])
                 tensors.append(image)
@@ -131,7 +129,7 @@ class ModalityDataset(data.Dataset):
 
         image = torch.stack([self.transform(tensor) for tensor in tensors])
 
-        sample = {'image': image, 'label': labels.labels[self.exp_name][plant],
+        sample = {'image': image, 'label': labels[self.exp_name][plant],
                   'position': self.positions[plant], 'plant': plant}
 
         return sample

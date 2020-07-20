@@ -1,11 +1,8 @@
-from datetime import datetime
 import glob
 from PIL import Image
 from torchvision.transforms import ToTensor
-
-#from .exceptions import *
 from .experiments import plant_positions
-from .ModalityDataset import ModalityDataset
+from .ModalityDataset import ModalityDataset, DirEmptyError
 from train.parameters import *  # importing all parameters
 
 class LWIR(ModalityDataset):

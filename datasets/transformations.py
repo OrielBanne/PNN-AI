@@ -96,6 +96,24 @@ class RandomCrop(RandomPNNTransform):
             self.params = T.RandomCrop.get_params(img, self.out_size)
 
         return TF.crop(img, *self.params)
+    
+    
+
+class RGB_Image_Crop(RandomPNNTransform):
+    def __init__(self, out_size):
+        self.out_size = out_size
+        super().__init__()
+
+
+    @staticmethod
+    def get_params():
+        return None
+
+    def __call__(self, img: Image.Image):
+        if self.params is None:
+            self.params = T.RandomCrop.get_params(img, self.out_size)
+
+        return TF.crop(img, *self.params)
 
 
 class RandomHorizontalFlip(RandomPNNTransform):

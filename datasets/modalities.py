@@ -3,17 +3,13 @@
 #                                  MODALITIES                                                          #
 #                                                                                                      #
 ########################################################################################################
-
 from torch.utils import data
 from typing import Dict, List
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
-
-
 from . import LWIR, VIR577nm, VIR692nm, VIR732nm, VIR970nm, VIRPolar, VIRPolarA, VIRNoFilter, Color
 from .labels import labels
 from train import parameters
-
 import numpy as np
 
 mod_map = {
@@ -30,7 +26,6 @@ mod_map = {
 
 
 #           MODALITIES
-
 class Modalities(data.Dataset):
     """
     A dataset class that lets the user decides which modalities to use.
@@ -50,19 +45,20 @@ class Modalities(data.Dataset):
         :param transform: optional transform to be applied on a sample
         :param k_mods: modalities to be in the dataset, as dictionaries of initialization arguments
         """
-
         if len(k_mods) == 0:
             print('k_mods length was zero')
             mods = mod_map.keys()
-
         print('creating self.modalities')
         self.modalities = dict()
-
         for mod in k_mods:
             print('@Modalities, mod: ', mod, end='')
-            self.modalities[mod] = mod_map[mod](root_dir=root_dir, exp_name=exp_name, split_cycle=split_cycle,
-                                                start_date=start_date, end_date=end_date, **(k_mods[mod]))
-
+            self.modalities[mod] = mod_map[mod](
+                root_dir=root_dir,
+                exp_name=parameters.experiment,
+                split_cycle=split_cycle,
+                start_date=start_date,
+                end_date=end_date,
+                **(k_mods[mod]))
         self.transform = transform
         self.exp_name = exp_name
         self.split_cycle = split_cycle
@@ -77,20 +73,15 @@ class Modalities(data.Dataset):
         sample = {
             mod: dataset[idx]['image'] for mod, dataset in self.modalities.items()
         }
-
         plant = idx % self.num_plants
-
         sample['label'] = labels[self.exp_name][plant]
         sample['plant'] = plant
-
         if self.transform:  # check this part not sure it works
             sample = self.transform(sample)
-
         return sample
 
 
 #     MODALITIES SUBSET
-
 class ModalitiesSubset(data.Dataset):
     def __init__(self, modalities: Modalities, plants: List[int]):
         self.data = modalities
@@ -104,20 +95,17 @@ class ModalitiesSubset(data.Dataset):
     def __getitem__(self, idx):
         plant = self.plants[idx % self.num_plants]
         cycle = idx // self.num_plants
-
         data = self.data[self.data.num_plants * cycle + plant]
         data['plant'] = idx % self.num_plants
-
         return data
 
     @staticmethod
     def random_split(modalities: Modalities):
         indices = np.arange(modalities.num_plants)
         plant_labels = np.asarray(labels[modalities.exp_name])
-
         #  https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
-        train_indices, test_indices = train_test_split(indices, train_size=parameters.train_ratio, stratify=plant_labels)
-
+        train_indices, test_indices = train_test_split(indices, train_size=parameters.train_ratio,
+                                                       stratify=plant_labels)
         return ModalitiesSubset(modalities, train_indices), ModalitiesSubset(modalities, test_indices)
 
     @staticmethod  # A generator
@@ -125,7 +113,7 @@ class ModalitiesSubset(data.Dataset):
         # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
         n_plants = len(labels[parameters.experiment])
         n_classes = len(np.unique(labels[parameters.experiment]))
-        n_splits = int(n_plants/n_classes)
+        n_splits = n_plants // n_classes
         X = tuple(i for i in range(n_plants))  # Plants by order
         y = np.array(labels[parameters.experiment])
         skf = StratifiedKFold(n_splits=n_splits)
@@ -137,8 +125,6 @@ class ModalitiesSubset(data.Dataset):
     def leave_one_out(modalities: Modalities, plant_idx: int):
         rest_idx = list(range(modalities.num_plants))
         del rest_idx[plant_idx]
-
         one_out = ModalitiesSubset(modalities, [plant_idx])
         rest = ModalitiesSubset(modalities, rest_idx)
-
         return one_out, rest

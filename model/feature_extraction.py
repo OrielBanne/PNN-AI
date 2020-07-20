@@ -41,10 +41,10 @@ class ImageFeatureExtractor(nn.Module):
         ## Note - inception_V3 expects tensors with a size of Nx3x299x299, ensure this size!
         #  So why are we using 229 on 229 images?
         self.inception = inception_v3(pretrained=True, transform_input=False, aux_logits=True)
-        ## pretrained      - if true, returns a model pre-trained on ImageNet.
-        ## progress        - if true, displays a progress bar of the download to stderr ## should try this
-        ## aux_logits      - if true, add an auxilary branch that can improve training. default =True
-        ## transform_input - if True, preprocesses the input according to the method with which it was trained on imageNet. default = False
+        # pretrained      - if true, returns a model pre-trained on ImageNet.
+        # progress        - if true, displays a progress bar of the download to stderr ## should try this
+        # aux_logits      - if true, add an auxiliary branch that can improve training. default =True
+        # transform_input - if True, preprocesses the input according to the method with which it was trained on imageNet. default = False
 
         self.inception.fc = Identity()  # adding a last layer FC layer identity
         self.inception.eval()  # evaluation mode - during testing we do not want dropout to take place - correct???
