@@ -7,7 +7,7 @@ steps for preparing a new experiment
 
 1 - receive the new experiments data<br>
     i - copy the data to experiments folder (create a folder like 'ExpX')
-     scp -r orielban@violeta.cs.technion.ac.il:/home/orielban/experiments/Exp4 .
+     scp -r mail:/home/orielban/experiments/Exp4 .
      the dot at the end of the instruction is critical (copy all)<br>
 2 - check there are images and data looks good<br>
 3 - create movies to check the data, use PNN/movieLWIR.py and PNN/LWIR TimeLapse.ipynb<br>
