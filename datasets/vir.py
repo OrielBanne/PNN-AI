@@ -1,24 +1,19 @@
-from datetime import datetime
 import glob
-import numpy as np
 import torch
 
-from .exceptions import *
 from .experiments import plant_positions
-from .ModalityDataset import ModalityDataset
+from .ModalityDataset import ModalityDataset, DirEmptyError
+from train.parameters import *  # importing all parameters
 
 
 # img_size = (5472, 3648)
-
-
 class VIR(ModalityDataset):
     """
     An abstract class. The parent class of all VIRs classes.
     """
 
     def __init__(self, root_dir: str, exp_name: str, vir_type: str, img_len: int = 510, split_cycle=7,
-                 start_date=datetime(2019, 6, 4), end_date=datetime(2019, 7, 7),
-                 max_len=None, transform=None):
+                 start_date=start_date, end_date=end_date, skip=1, max_len=None, transform=None):
         """
         :param root_dir: path to the experiment directory
         :param exp_name: the experiment we want to use
@@ -29,7 +24,7 @@ class VIR(ModalityDataset):
         """
         self.vir_type = vir_type
         super().__init__(root_dir, exp_name, 'VIR_day', img_len, plant_positions[exp_name].vir_positions, split_cycle,
-                         start_date, end_date, 1, max_len, transform)
+                         start_date, end_date, skip, max_len, transform)
 
     def _get_image(self, directory, plant_position):
         left = plant_position[0] - self.img_len // 2

@@ -47,7 +47,7 @@ class Modalities(data.Dataset):
         """
         if len(k_mods) == 0:
             print('k_mods length was zero')
-            mods = mod_map.keys()
+            mods = mod_map.keys()  # TODO - why mods? never used
         print('creating self.modalities')
         self.modalities = dict()
         for mod in k_mods:
@@ -59,6 +59,7 @@ class Modalities(data.Dataset):
                 start_date=start_date,
                 end_date=end_date,
                 **(k_mods[mod]))
+            print('root_dir is : ', root_dir)
         self.transform = transform
         self.exp_name = exp_name
         self.split_cycle = split_cycle

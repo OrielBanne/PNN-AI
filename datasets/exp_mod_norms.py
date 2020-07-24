@@ -1,9 +1,9 @@
 from torch.utils.data import DataLoader, Dataset
 import argparse
 
-from .ModalityDataset import ModalityDataset
-from .modalities import mod_map
-from .experiments import get_all_modalities, get_experiment_modalities, experiments_info
+from datasets.ModalityDataset import ModalityDataset
+from datasets.modalities import mod_map
+from datasets.experiments import get_all_modalities, get_experiment_modalities, experiments_info
 
 
 class ModsImagesDataset(Dataset):

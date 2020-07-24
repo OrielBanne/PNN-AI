@@ -13,6 +13,7 @@ from train import parameters  # importing all parameters/home/pnn/PNN/train
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 import numpy as np
 import seaborn
 
@@ -61,6 +62,8 @@ def confusion_matrix(test_config: TestConfig, run):
     print('----------------------------------------------------')
     temp = len(classes_exp)
     conf_matrix = np.zeros([temp, temp])
+    y_tot = []
+    y_hat_tot = []
 
     test_config.feat_ext.eval()
     test_config.label_cls.eval()
@@ -84,6 +87,10 @@ def confusion_matrix(test_config: TestConfig, run):
             label_out = test_config.label_cls(features)
             y = labels.data.tolist()
             y_hat = label_out.max(dim=1)[1].tolist()
+            for u in y:
+                y_tot.append(u)
+            for u in y_hat:
+                y_hat_tot.append(u)
 
             for yi, y_hati in zip(y, y_hat):
                 conf_matrix[yi, y_hati] += 1
@@ -125,7 +132,14 @@ def confusion_matrix(test_config: TestConfig, run):
 
     # TODO: Normalized Confusion Matrix
 
-    return conf_matrix
+    print(' for classification report -   y_tot  and y hat_tot are: ')
+    print('y_tot = ', y_tot)
+    print('y hat tot = ', y_hat_tot)
+
+    print(classification_report(y_tot, y_hat_tot, target_names=list((classes[parameters.experiment])), digits=3))
+    class_report = 0
+
+    return conf_matrix, class_report
 
 
 def test_model(test_config: TestConfig):
@@ -278,9 +292,9 @@ def train_loop(test_config: TestConfig,
     plt.savefig(f'/home/pnn/PNN/Results/{train_name}_loss_{datetime.date(datetime.now())}_run_{run}.png')
     plt.close()
 
-    conf_matrix = confusion_matrix(test_config, run)
+    conf_matrix, class_report = confusion_matrix(test_config, run)
 
-    return train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix
+    return train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix, class_report
 
 
 def restore_checkpoint(test_config: TestConfig):
@@ -304,7 +318,8 @@ def main():
 
     curr_experiment = experiments_info[parameters.experiment]
     modalities = get_experiment_modalities_params(curr_experiment, parameters.lwir_skip, parameters.lwir_max_len,
-                                                  parameters.vir_max_len, parameters.color_max_len)
+                                                  parameters.vir_skip, parameters.vir_max_len,parameters.color_skip,
+                                                  parameters.color_max_len)
     used_modalities = get_used_modalities(modalities, parameters.excluded_modalities)
     print(parameters.experiment_path)
 
@@ -389,16 +404,6 @@ def main():
         feat_ext = FeatureExtractor(**feat_extractor_params).to(device)
         # because the criterion is cross entropy which in pytorch includes softmax,
         # there's no need for softmax layer as last layer in the net below (nn.Softmax(dim=1))
-        # label_cls = nn.Sequential(
-        #     nn.ReLU(),
-        #     nn.Linear(parameters.net_features_dim, len(classes[parameters.experiment]))
-        # ).to(device)
-        # plant_cls = nn.Sequential(
-        #     nn.ReLU(),
-        #     nn.Linear(parameters.net_features_dim, train_set.num_plants)
-        # ).to(device)
-
-        # For Dropout:
         label_cls = nn.Sequential(
             nn.ReLU(),
             nn.Linear(parameters.net_features_dim, len(classes[parameters.experiment])),
@@ -440,7 +445,7 @@ def main():
         train_accuracy_prog = []
         test_accuracy = []
         test_losses = []
-        train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix = train_loop(
+        train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix, class_report = train_loop(
             test_config,
             train_label_losses,
             train_plant_losses,
@@ -517,6 +522,7 @@ def main():
                 dpi=300)
     plt.close()
 
+    print('Class Report = ', class_report)
 
 if __name__ == '__main__':
     main()
