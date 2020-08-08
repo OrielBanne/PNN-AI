@@ -17,6 +17,8 @@ from datasets.labels import labels
 
 import os
 
+import numpy as np
+
 import glob
 from PIL import Image
 from datetime import datetime
@@ -41,6 +43,7 @@ class Inception3(nn.Module):
     """
 
     """
+
     def __init__(self):
         super().__init__()
         # Note - inception_V3 using 229 on 229 images
@@ -162,7 +165,8 @@ def get_dir_date_time(directory, root_dir, directory_suffix):
     :return: datetime date of the directory
     """
     dir_format = f"{root_dir}%Y_%m_%d_%H_%M_%S_{directory_suffix}"
-    string = str(datetime.strptime(directory, dir_format).date())+'_'+str(datetime.strptime(directory, dir_format).time())
+    string = str(datetime.strptime(directory, dir_format).date()) + '_' + \
+        str(datetime.strptime(directory, dir_format).time())
     return string
 
 
@@ -181,7 +185,6 @@ def filter_dirs(dirs, start_d, end_d, root_dir, directory_suffix):
 
 def LWIR_get_image(dire, plant_position, img_len=255, plant_crop_len: int = 65):
     """
-
     :param dire: the specific directory
     :param plant_position: the specific plant position required
     :param img_len: determines the size to be sent to inception
@@ -209,6 +212,51 @@ def LWIR_get_image(dire, plant_position, img_len=255, plant_crop_len: int = 65):
     to_tensor = ToTensor()
 
     return to_tensor(image).float()
+
+
+def get_image_dims(file_name: str):
+    """
+
+    :param file_name:
+    :return:
+    """
+    fields = file_name.split('/')[-1].split('_')
+    return int(fields[8]), int(fields[7])
+
+
+def get_exposure(file_name: str):
+    """
+
+    :param file_name:
+    :return:
+    """
+    return float(file_name.split('ET')[-1].split('.')[0])
+
+
+def get_VIR_image(dire, mod, plant_position, img_len=510):
+    """
+    VIR image getter function.
+    """
+    vir = 'VIR_day'
+    left = plant_position[0] - img_len // 2
+    right = plant_position[0] + img_len // 2
+    top = plant_position[1] - img_len // 2
+    bottom = plant_position[1] + img_len // 2
+
+    image_path = glob.glob(f"{dire}/*{mod}*.raw")
+    if len(image_path) == 0:
+        raise DirEmptyError()
+
+    image_path = image_path[0]
+
+    arr = np.fromfile(image_path, dtype=np.int16).reshape(*get_image_dims(image_path))
+    arr = arr[top:bottom, left:right].astype(np.float) / get_exposure(image_path)
+
+    return torch.from_numpy(arr).float().unsqueeze(0)
+
+
+def _dir_has_file(self, directory) -> bool:
+    return len(glob.glob(f"{directory}/*{self.vir_type}*.raw")) != 0
 
 
 def main():
@@ -248,7 +296,7 @@ def main():
                   dirs[-1].replace(root_dir, ''))
             dirs = filter_dirs(dirs, curr_experiment.start_date.date(), curr_experiment.end_date.date(), root_dir,
                                directory_suffix)
-            print('dirs  = ', dirs)
+            # print('dirs  = ', dirs)
 
             for dire in dirs:
                 date = get_dir_date_time(dire, root_dir, directory_suffix)
@@ -256,28 +304,24 @@ def main():
                 try:
                     for plant in range(num_plants):
                         if mod == 'lwir':
-                            # print('LWIR')
-                            # print('=======')
-                            # print('plant position experiment name ', exp_name)
-                            # print('position of the plant ', plant_positions[exp_name].lwir_positions[plant])
-                            # print('directory name ', dire)
-
                             image = LWIR_get_image(dire, plant_positions[exp_name].lwir_positions[plant])
-                            # print('image shape = ', image.shape)
-                            image = torch.squeeze(image, dim=0)
-                            # print('image shape = ', image.shape)
                             # image shape =  torch.Size([1, 255, 255])
+                            image = torch.squeeze(image, dim=0)
                             # image shape =  torch.Size([255, 255])
                             # because I am working with a single image [None,...], and then sending to device
                             image = image[None, ...].to(device)
                             feature = net(image)
                             features.append(feature)
+                        elif mod == "577nm" or "692nm" or "732nm " or "970nm" or "Polarizer" or "PolarizerA":
+                            image = get_VIR_image(dire, mod, plant_positions[exp_name].vir_positions[plant])
+                            image = torch.squeeze(image, dim=0)
+                            image = image[None, ...].to(device)
+                            feature = net(image)
+                            features.append(feature)
                 except DirEmptyError:
-                    print('----------------------------------------------------------------')
                     print('Empty Directory ', dire)
-                    print('----------------------------------------------------------------')
                     pass
-                torch.save(features, root+'_'.join([parameters.experiment, mod, 'features ', str(date)]))
+                torch.save(features, root + '_'.join([parameters.experiment, mod, 'features ', str(date)]))
 
 
 if __name__ == '__main__':
