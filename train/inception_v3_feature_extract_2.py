@@ -305,19 +305,16 @@ def main():
                     for plant in range(num_plants):
                         if mod == 'lwir':
                             image = LWIR_get_image(dire, plant_positions[exp_name].lwir_positions[plant])
-                            # image shape =  torch.Size([1, 255, 255])
-                            image = torch.squeeze(image, dim=0)
-                            # image shape =  torch.Size([255, 255])
-                            # because I am working with a single image [None,...], and then sending to device
-                            image = image[None, ...].to(device)
-                            feature = net(image)
-                            features.append(feature)
                         elif mod == "577nm" or "692nm" or "732nm " or "970nm" or "Polarizer" or "PolarizerA":
                             image = get_VIR_image(dire, mod, plant_positions[exp_name].vir_positions[plant])
-                            image = torch.squeeze(image, dim=0)
-                            image = image[None, ...].to(device)
-                            feature = net(image)
-                            features.append(feature)
+                        # image shape =  torch.Size([1, 255, 255])
+                        image = torch.squeeze(image, dim=0)
+                        # image shape =  torch.Size([255, 255])
+                        # because I am working with a single image [None,...], and then sending to device
+                        image = image[None, ...].to(device)
+                        feature = net(image)
+                        features.append(feature)
+
                 except DirEmptyError:
                     print('Empty Directory ', dire)
                     pass
