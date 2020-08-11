@@ -16,14 +16,16 @@ from torchvision.transforms import ToTensor
 
 from .experiments import plant_positions
 from .ModalityDataset import ModalityDataset, DirEmptyError
-from train.parameters import *  # importing all parameters
+from train import parameters
 
 
 class Color(ModalityDataset):
-    def __init__(self, root_dir: str, exp_name: str, img_len: int = 255, split_cycle=7,
-                 start_date=start_date, end_date=end_date, max_len=None, transform=None):
+    def __init__(self, root_dir: str, exp_name: str, img_len: int = 255, split_cycle=parameters.split_cycle,
+                 start_date=parameters.start_date, end_date=parameters.end_date, skip=parameters.color_skip,
+                 max_len=None, transform=None):
         super().__init__(root_dir, exp_name, 'D465_Color', img_len, plant_positions[exp_name].color_positions,
-                         split_cycle, start_date, end_date, 1, max_len, transform)
+                         split_cycle, start_date, end_date, skip=1, max_len=parameters.color_max_len,
+                         transform=None)
 
     def _get_image(self, directory, plant_position):
         left = plant_position[0] - self.img_len // 2

@@ -22,6 +22,7 @@ import numpy as np
 import glob
 from PIL import Image
 from datetime import datetime
+from matplotlib import cm  # Color Map
 
 
 def greyscale_to_rgb(image: torch.Tensor, add_channels_dim=False) -> torch.Tensor:
@@ -102,6 +103,13 @@ def get_modalities_params(exp_info: ExpInfo):
                  RandomCrop((229, 229)), trans.ToTensor()])
         }
 
+    if 'depth' in exp_info.modalities_norms.keys():
+        modalities['depth'] = {
+            'max_len': None, 'skip': 1, 'transform': trans.Compose(
+                [trans.Normalize(*exp_info.modalities_norms['depth']), trans.ToPILImage(),
+                 RandomCrop((229, 229)), trans.ToTensor(), GreyscaleToRGB()])
+        }
+
     modalities.update(
         {
             mod: {
@@ -166,7 +174,7 @@ def get_dir_date_time(directory, root_dir, directory_suffix):
     """
     dir_format = f"{root_dir}%Y_%m_%d_%H_%M_%S_{directory_suffix}"
     string = str(datetime.strptime(directory, dir_format).date()) + '_' + \
-        str(datetime.strptime(directory, dir_format).time())
+             str(datetime.strptime(directory, dir_format).time())
     return string
 
 
@@ -183,7 +191,7 @@ def filter_dirs(dirs, start_d, end_d, root_dir, directory_suffix):
     return [d for d in dirs if start_d <= get_dir_date(d, root_dir, directory_suffix) <= end_d and dir_has_file(d)]
 
 
-def LWIR_get_image(dire, plant_position, img_len=255, plant_crop_len: int = 65):
+def get_lwir_image(dire, plant_position, img_len=255, plant_crop_len: int = 65):
     """
     :param dire: the specific directory
     :param plant_position: the specific plant position required
@@ -233,11 +241,10 @@ def get_exposure(file_name: str):
     return float(file_name.split('ET')[-1].split('.')[0])
 
 
-def get_VIR_image(dire, mod, plant_position, img_len=510):
+def get_vir_image(dire, mod, plant_position, img_len=510):
     """
     VIR image getter function.
     """
-    vir = 'VIR_day'
     left = plant_position[0] - img_len // 2
     right = plant_position[0] + img_len // 2
     top = plant_position[1] - img_len // 2
@@ -255,8 +262,78 @@ def get_VIR_image(dire, mod, plant_position, img_len=510):
     return torch.from_numpy(arr).float().unsqueeze(0)
 
 
-def _dir_has_file(self, directory) -> bool:
-    return len(glob.glob(f"{directory}/*{self.vir_type}*.raw")) != 0
+# def _dir_has_file(self, directory) -> bool:
+#     return len(glob.glob(f"{directory}/*{self.vir_type}*.raw")) != 0
+#
+#
+# def color_dir_has_file(directory) -> bool:
+#     """
+#
+#     :rtype: int
+#     """
+#     return len(glob.glob(directory + '/*.jpg')) != 0
+
+
+def get_color_image(dire, plant_position, img_len=255):
+    """
+
+    :param dire:
+    :param plant_position:
+    :param img_len:
+    :return:
+    """
+    # 'D465_Color'
+    left = plant_position[0] - img_len // 2
+    right = plant_position[0] + img_len // 2
+    top = plant_position[1] - img_len // 2
+    bottom = plant_position[1] + img_len // 2
+
+    image_path = glob.glob(dire + '/*.jpg')
+    if len(image_path) == 0:
+        raise DirEmptyError()
+
+    image_path = image_path[0]
+
+    image = Image.open(image_path)
+    image = image.crop((left, top, right, bottom))
+
+    to_tensor = ToTensor()
+
+    return to_tensor(image).float()
+
+
+def read_depth_image(image_path, bit_type, w, h):
+    raw_image = np.fromfile(image_path, dtype=bit_type)
+    # TODO: Clip image to 34000<value<38000 and normalize the data
+    return raw_image[:h * w].reshape(h, w)
+
+
+def get_depth_image(dire, plant_position, img_len=255):
+    """
+
+    :param dire:
+    :param plant_position:
+    :param img_len:
+    :return:
+    """
+    # 'Depth_day_night'
+    left = plant_position[0] - img_len // 2
+    right = plant_position[0] + img_len // 2
+    top = plant_position[1] - img_len // 2
+    bottom = plant_position[1] + img_len // 2
+
+    image_path = glob.glob(dire + '/*ZY_Z16*.raw')
+    if len(image_path) == 0:
+        raise DirEmptyError()
+
+    image_path = image_path[0]
+    img = read_depth_image(image_path, 'uint8', 1280, 1024)  # Image.open(image_path)
+    image = Image.fromarray(np.uint8(cm.gist_earth(img) * 255))
+    image = image.crop((left, top, right, bottom))
+
+    to_tensor = ToTensor()
+
+    return to_tensor(image).float()
 
 
 def main():
@@ -264,10 +341,10 @@ def main():
 
     :return:
     """
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    curr_experiment = experiments_info[parameters.experiment]
-    root_dir = parameters.experiment_path
     exp_name = parameters.experiment
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    curr_experiment = experiments_info[exp_name]
+    root_dir = parameters.experiment_path
     modalities = get_modalities_params(curr_experiment)
     used_modalities = get_used_modalities(modalities, parameters.excluded_modalities)
 
@@ -304,14 +381,26 @@ def main():
                 try:
                     for plant in range(num_plants):
                         if mod == 'lwir':
-                            image = LWIR_get_image(dire, plant_positions[exp_name].lwir_positions[plant])
-                        elif mod == "577nm" or "692nm" or "732nm " or "970nm" or "Polarizer" or "PolarizerA":
-                            image = get_VIR_image(dire, mod, plant_positions[exp_name].vir_positions[plant])
+                            image = get_lwir_image(dire, plant_positions[exp_name].lwir_positions[plant])
+                        elif mod in ("577nm", "692nm", "732nm ", "970nm", "Polarizer", "PolarizerA"):
+                            image = get_vir_image(dire, mod, plant_positions[exp_name].vir_positions[plant])
+                        elif mod == "color":
+                            image = get_color_image(dire, plant_positions[exp_name].color_positions[plant])
+                        elif mod == "depth":
+                            image = get_depth_image(dire, plant_positions[exp_name].depth_positions[plant])
+                        else:
+                            print('unprepared mod =  ', mod)
+                            print('  !!!! ')
                         # image shape =  torch.Size([1, 255, 255])
-                        image = torch.squeeze(image, dim=0)
-                        # image shape =  torch.Size([255, 255])
-                        # because I am working with a single image [None,...], and then sending to device
-                        image = image[None, ...].to(device)
+                        # print('color image.shape = ', image.shape)  # torch.Size([3, 254, 254])
+                        if image.shape[0] == 1:
+                            image = torch.squeeze(image, dim=0)
+                            # print('color image.shape = ', image.shape) # torch.Size([3, 254, 254])
+                            # image shape =  torch.Size([255, 255])
+                            # because I am working with a single image [None,...], and then sending to device
+                            image = image[None, ...].to(device)
+                        else:
+                            image = image.to(device)
                         feature = net(image)
                         features.append(feature)
 

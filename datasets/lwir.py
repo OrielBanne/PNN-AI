@@ -1,17 +1,20 @@
+""" LWIR Image data handling"""
 import glob
 from PIL import Image
 from torchvision.transforms import ToTensor
-from .experiments import plant_positions
-from .ModalityDataset import ModalityDataset, DirEmptyError
-from train.parameters import *  # importing all parameters
+from datasets.experiments import plant_positions
+from datasets.ModalityDataset import ModalityDataset, DirEmptyError
+from train import parameters
+
 
 class LWIR(ModalityDataset):
     """
     The LWIR data from the experiment.
     """
 
-    def __init__(self, root_dir: str, exp_name: str, img_len=255, split_cycle=7, plant_crop_len: int = 65,
-                 start_date=start_date, end_date=end_date, skip=1, max_len=None, transform=None):
+    def __init__(self, root_dir: str, exp_name: str, img_len=255, split_cycle=parameters.split_cycle,
+                 plant_crop_len: int = 65, start_date=parameters.start_date,
+                 end_date=parameters.end_date, skip=1, max_len=None, transform=None):
         """
         :param plant_crop_len: the size of the area around each plant that will be taken as an image
         """
@@ -35,7 +38,6 @@ class LWIR(ModalityDataset):
         # print(' image mode is ',image.mode)
         image = image.crop((left, top, right, bottom))
         image = image.resize((self.img_len, self.img_len), resample=Image.NEAREST)
-
 
         to_tensor = ToTensor()
 

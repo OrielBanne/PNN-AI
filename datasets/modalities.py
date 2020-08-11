@@ -7,11 +7,14 @@ from torch.utils import data
 from typing import Dict, List
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
-from . import LWIR, VIR577nm, VIR692nm, VIR732nm, VIR970nm, VIRPolar, VIRPolarA, VIRNoFilter, Color
-from .labels import labels
+from datasets import LWIR, VIR577nm, VIR692nm, VIR732nm, VIR970nm, VIRPolar, VIRPolarA, VIRNoFilter, \
+    Color, Depth_day_night
+from datasets.labels import labels
 from train import parameters
 import numpy as np
 
+
+# TODO: Add any additional mods here:
 mod_map = {
     'lwir': LWIR,
     '577nm': VIR577nm,
@@ -21,11 +24,11 @@ mod_map = {
     'polar': VIRPolar,
     'polar_a': VIRPolarA,
     'noFilter': VIRNoFilter,
-    'color': Color
+    'color': Color,
+    'depth': Depth_day_night,
 }
 
 
-#           MODALITIES
 class Modalities(data.Dataset):
     """
     A dataset class that lets the user decides which modalities to use.
@@ -82,7 +85,6 @@ class Modalities(data.Dataset):
         return sample
 
 
-#     MODALITIES SUBSET
 class ModalitiesSubset(data.Dataset):
     def __init__(self, modalities: Modalities, plants: List[int]):
         self.data = modalities
@@ -117,7 +119,7 @@ class ModalitiesSubset(data.Dataset):
         n_splits = n_plants // n_classes
         X = tuple(i for i in range(n_plants))  # Plants by order
         y = np.array(labels[parameters.experiment])
-        skf = StratifiedKFold(n_splits=n_splits)
+        skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=1)
         skf.get_n_splits(X, y)
         for train, test in skf.split(X, y):
             yield ModalitiesSubset(modalities, train), ModalitiesSubset(modalities, test)
@@ -129,3 +131,6 @@ class ModalitiesSubset(data.Dataset):
         one_out = ModalitiesSubset(modalities, [plant_idx])
         rest = ModalitiesSubset(modalities, rest_idx)
         return one_out, rest
+
+
+

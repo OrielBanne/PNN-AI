@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import NamedTuple, Dict, Tuple, List, Any
+from typing import NamedTuple, Dict, Tuple, List
 import torchvision.transforms as T
-from .transformations import RandomCrop, RandomHorizontalFlip, RandomVerticalFlip, GreyscaleToRGB
+from datasets.transformations import RandomCrop, RandomHorizontalFlip, RandomVerticalFlip, GreyscaleToRGB
 
 
 class ExpPositions:
@@ -126,7 +126,8 @@ experiments_info: Dict[str, ExpInfo] = {
             '732nm': ([.1578], [.6006]),
             '970nm': ([.0026], [.0045]),
             'noFilter': ([1.4025], [3.6011]),
-            'color': ([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            'color': ([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+            'depth': ([0.5], [0.5])  # TODO fix depth Norms
         }
     ),
     'Exp4': ExpInfo(
@@ -253,6 +254,13 @@ plant_positions = {
             (1109, 1759), (1529, 1771), (1915, 1767), (2259, 1795), (2601, 1791), (2921, 1807),
             (1107, 2059), (1533, 2061), (1917, 2077), (2289, 2073), (2581, 2039), (2945, 2067),
             (1103, 2343), (1551, 2315), (1957, 2359), (2299, 2341), (2599, 2327), (2957, 2341)
+        ),
+        'depth_positions': (
+            (265, 325),  (425, 325),  (595, 325),  (735, 325),  (875, 325),  (1015, 315),
+            (265, 465),  (435, 465),  (605, 465),  (745, 475),  (875, 475),  (1015, 475),
+            (265, 835),  (445, 595),  (605, 595),  (745, 605),  (875, 715),  (1015, 615),
+            (275, 585),  (445, 715),  (605, 725),  (755, 725),  (885, 605),  (1025, 725),
+            (275, 715),  (455, 825),  (615, 835),  (755, 835),  (885, 835),  (1025, 845)
         )
     }),
     'Exp4': ExpPositions({

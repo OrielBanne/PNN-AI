@@ -1,9 +1,14 @@
+"""
+VIR Image Handling
+"""
 import glob
 import torch
 
-from .experiments import plant_positions
-from .ModalityDataset import ModalityDataset, DirEmptyError
-from train.parameters import *  # importing all parameters
+from datasets.experiments import plant_positions
+from datasets.ModalityDataset import ModalityDataset, DirEmptyError
+from train import parameters
+
+import numpy as np
 
 
 # img_size = (5472, 3648)
@@ -12,8 +17,9 @@ class VIR(ModalityDataset):
     An abstract class. The parent class of all VIRs classes.
     """
 
-    def __init__(self, root_dir: str, exp_name: str, vir_type: str, img_len: int = 510, split_cycle=7,
-                 start_date=start_date, end_date=end_date, skip=1, max_len=None, transform=None):
+    def __init__(self, root_dir: str, exp_name: str, vir_type: str, img_len: int = 510,
+                 split_cycle=parameters.split_cycle, start_date=parameters.start_date,
+                 end_date=parameters.end_date, skip=1, max_len=None, transform=None):
         """
         :param root_dir: path to the experiment directory
         :param exp_name: the experiment we want to use

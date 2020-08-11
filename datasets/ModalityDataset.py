@@ -13,8 +13,8 @@ from torch.utils import data
 from torchvision import transforms
 from typing import Tuple
 
-from .labels import labels
-from .transformations import RandomPNNTransform
+from datasets.labels import labels
+from datasets.transformations import RandomPNNTransform
 from train import parameters
 from datetime import datetime
 
@@ -28,14 +28,13 @@ class ModalityDataset(data.Dataset):
     """
     The parent class for datasets from the experiment.
     """
-
     def __init__(self, root_dir: str, exp_name: str, directory_suffix: str, img_len: int,
-                 positions: Tuple[Tuple[int, int], ...], split_cycle=7, start_date=parameters.start_date,
-                 end_date=parameters.end_date, skip=1, max_len=None, transform=None):
+                 positions: Tuple[Tuple[int, int], ...], split_cycle=parameters.split_cycle,
+                 start_date=parameters.start_date, end_date=parameters.end_date, skip=1, max_len=None, transform=None):
         """
         :param root_dir: path to the experiment directory
         :param exp_name: the experiment we want to use
-        :param directory_suffix: the directory name suffix for the image type
+        :param directory_suffix: the directory name suffix for the image type # TODO where does it come from??
         :param positions: the positions of the plants within the images
         :param img_len: the length that the images will be resized to
         :param split_cycle: amount of days the data will be split by
@@ -43,17 +42,25 @@ class ModalityDataset(data.Dataset):
         :param max_len: the max amount of images to use; if None - no limit
         :param transform: optional transform to be applied on each frame
         """
-        print(' @ ModalityDataset', end=" ")
-        print('root_dir=', root_dir, end=" ")
+        print('\n ModalityDataset Class')
+        print('root_dir=', root_dir)
 
         self.root_dir = root_dir
 
         print('dir_suffix=  ', directory_suffix)
         self.directory_suffix = directory_suffix
         dirs = sorted(glob.glob(f'{root_dir}/*{directory_suffix}'))
-        print('sorted directories = ', dirs)
+        # dd = [d.replace(root_dir, '') for d in dirs]
+        # dd = [d.replace(directory_suffix, '') for d in dd]
+        # # print('sorted directories = ', dd)
+        print('the number of dates in the sorted directories = ', len(dirs))
+        print('min  max times for sorted files in mod:', dirs[0].replace(root_dir, ''),
+              dirs[-1].replace(root_dir, ''))
         dirs = self.__filter_dirs(dirs, start_date.date(), end_date.date())
-        print('filtered dirs = ', dirs)
+        # dd = [d.replace(root_dir, '') for d in dirs]
+        # dd = [d.replace(directory_suffix, '') for d in dd]
+        # # print('filtered dirs = ', dd)
+        print('the number of dates in the filtered directories = ', len(dirs))
         self.cycles_dirs = self.__get_cycles_dirs(dirs, split_cycle, skip)
 
         self.exp_name = exp_name
@@ -96,6 +103,9 @@ class ModalityDataset(data.Dataset):
             days_dirs[-1].append(directory)
 
         cycles_dirs = [sum(days_dirs[idx::split_cycle], []) for idx in range(split_cycle)]
+        cd_for_printout = [cycle_dirs[::skip] for cycle_dirs in cycles_dirs]
+        print('min  max times for mod:', cd_for_printout[0][0].replace(self.root_dir, ''),
+              cd_for_printout[0][-1].replace(self.root_dir, ''))
         return [cycle_dirs[::skip] for cycle_dirs in cycles_dirs]
 
     def __filter_dirs(self, dirs, start_d, end_d):

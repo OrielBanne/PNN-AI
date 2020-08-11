@@ -8,11 +8,10 @@
 import numpy as np
 from datasets import labels
 from datasets.experiments import experiments_info
-
 print('~~~~~~~~~~~~~IMPORT PARAMETERS~~~~~~~~~~~~~')
 
 # Default Parameters
-experiment = 'Exp0'  # Experiment name
+experiment = 'Exp3'  # Experiment name
 experiment_path = f'/home/pnn/experiments/{experiment}/'
 num_days = None  # should be None
 split_cycle = 1
@@ -37,7 +36,7 @@ print(start_date)
 # Choose Device
 cdevice = "cuda:0"
 
-excluded_modalities = ['noFilter', 'polar', 'polar_a', 'color']  # All of the modalities that you don't want to use
+excluded_modalities = ['noFilter', 'polar', 'polar_a', '970nm', 'lwir', '577nm', '692nm', '732nm', 'color']  # 'depth'
 
 excluded_plants = []
 test_plants = []
