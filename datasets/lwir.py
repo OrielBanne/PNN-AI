@@ -33,11 +33,10 @@ class LWIR(ModalityDataset):
             raise DirEmptyError()
 
         image_path = image_path[0]
-        # print('image path is : ',image_path)
         image = Image.open(image_path)
-        # print(' image mode is ',image.mode)
         image = image.crop((left, top, right, bottom))
-        image = image.resize((self.img_len, self.img_len), resample=Image.NEAREST)
+        # image = image.resize((self.img_len, self.img_len), resample=Image.NEAREST)
+        image = image.resize((self.img_len, self.img_len), resample=Image.BICUBIC)  # TODO: already changed  -check
 
         to_tensor = ToTensor()
 

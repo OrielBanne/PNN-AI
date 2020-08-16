@@ -2,7 +2,8 @@ from torch import nn, optim
 from torch.utils import data
 from datetime import timedelta, datetime
 
-from datasets import Modalities, ModalitiesSubset, classes, labels
+from datasets.labels import classes, labels
+from datasets.modalities import Modalities, ModalitiesSubset
 from datasets.transformations import *
 from datasets.experiments import get_experiment_modalities_params, experiments_info, get_all_modalities
 from model import PlantFeatureExtractor as FeatureExtractor
@@ -12,7 +13,7 @@ from train import parameters  # importing all parameters/home/pnn/PNN/train
 
 import matplotlib.pyplot as plt
 
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, cohen_kappa_score, matthews_corrcoef
 from sklearn.metrics import classification_report
 import numpy as np
 import seaborn
@@ -135,8 +136,12 @@ def confusion_matrix(test_config: TestConfig, run):
     print(' for classification report -   y_tot  and y hat_tot are: ')
     print('y_tot = ', y_tot)
     print('y hat tot = ', y_hat_tot)
-
+    # https://towardsdatascience.com/multi-class-metrics-made-simple-part-ii-the-f1-score-ebe8b2c2ca1
     print(classification_report(y_tot, y_hat_tot, target_names=list((classes[parameters.experiment])), digits=3))
+    # https://towardsdatascience.com/multi-class-metrics-made-simple-the-kappa-score-aka-cohens-kappa-coefficient-bdea137af09c
+    print('cohen_kappa_score  = ', cohen_kappa_score(y_tot, y_hat_tot))
+    # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.matthews_corrcoef.html
+    print('mathews correlation coefficient  = ', matthews_corrcoef(y_tot, y_hat_tot))
     class_report = 0
 
     return conf_matrix, class_report
@@ -155,7 +160,7 @@ def test_model(test_config: TestConfig):
         for batch in test_loader:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-            labels = batch['label'].to(test_config.device)
+            lbls = batch['label'].to(test_config.device)
 
             x = batch.copy()
 
@@ -167,9 +172,9 @@ def test_model(test_config: TestConfig):
 
             features: torch.Tensor = test_config.feat_ext(**x)
             label_out = test_config.label_cls(features)
-            label_loss = test_config.criterion(label_out, labels)
+            label_loss = test_config.criterion(label_out, lbls)
 
-            equality = (labels.data == label_out.max(dim=1)[1])
+            equality = (lbls.data == label_out.max(dim=1)[1])
             tot_correct += equality.float().sum().item()
             tot_label_loss += label_loss.item()
 
@@ -318,7 +323,7 @@ def main():
 
     curr_experiment = experiments_info[parameters.experiment]
     modalities = get_experiment_modalities_params(curr_experiment, parameters.lwir_skip, parameters.lwir_max_len,
-                                                  parameters.vir_skip, parameters.vir_max_len,parameters.color_skip,
+                                                  parameters.vir_skip, parameters.vir_max_len, parameters.color_skip,
                                                   parameters.color_max_len)
     used_modalities = get_used_modalities(modalities, parameters.excluded_modalities)
     print(parameters.experiment_path)
@@ -341,7 +346,7 @@ def main():
                          **used_modalities)
 
     print(dump(dataset))
-    # TODO: automate a change in the class labels to enumerate from 0 to len(classes)
+
     targets = [dataset[i]['label'] for i in range(len(dataset))]
     class_numbers = unique(targets)
     print('class_numbers   = ', class_numbers)
@@ -401,14 +406,21 @@ def main():
                 'kernel_size': kernel_size
             }
 
-        feat_ext = FeatureExtractor(**feat_extractor_params).to(device)
+        feat_ext = FeatureExtractor(**feat_extractor_params).to(device)  # Plant Feature Extractor
+
         # because the criterion is cross entropy which in pytorch includes softmax,
         # there's no need for softmax layer as last layer in the net below (nn.Softmax(dim=1))
+        print('len parameters = ', parameters.net_features_dim, '# of classes =', len(classes[parameters.experiment]))
+        print()
+        print('linear layer ')
+        print('input ', parameters.net_features_dim, 'output ', parameters.net_features_dim // 2)
+
         label_cls = nn.Sequential(
             nn.ReLU(),
             nn.Linear(parameters.net_features_dim, len(classes[parameters.experiment])),
-            nn.Dropout(p=0.35, inplace=False)
+            nn.Dropout(p=0.2, inplace=False),
         ).to(device)
+
         plant_cls = nn.Sequential(
             nn.ReLU(),
             nn.Linear(parameters.net_features_dim, train_set.num_plants),
@@ -417,6 +429,7 @@ def main():
 
         criterion = nn.CrossEntropyLoss(reduction='sum').to(device)
 
+        # TODO - for fast label learn use Adam. For slow Plant learn - use SGD
         if parameters.optimizer == 'SGD':
             label_opt = optim.SGD(label_cls.parameters(), lr=parameters.label_lr, weight_decay=1e-3)  # , momentum=0.7
             plant_opt = optim.SGD(plant_cls.parameters(), lr=parameters.plant_lr, weight_decay=1e-3)  # momentum=0.9,
@@ -445,7 +458,9 @@ def main():
         train_accuracy_prog = []
         test_accuracy = []
         test_losses = []
-        train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix, class_report = train_loop(
+        # TRAIN LOOP CALL
+        train_label_losses, train_plant_losses, train_accuracy_prog, test_accuracy, test_losses, conf_matrix, \
+        class_report = train_loop(
             test_config,
             train_label_losses,
             train_plant_losses,
@@ -523,6 +538,7 @@ def main():
     plt.close()
 
     print('Class Report = ', class_report)
+
 
 if __name__ == '__main__':
     main()

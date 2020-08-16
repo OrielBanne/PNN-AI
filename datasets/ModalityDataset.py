@@ -42,24 +42,18 @@ class ModalityDataset(data.Dataset):
         :param max_len: the max amount of images to use; if None - no limit
         :param transform: optional transform to be applied on each frame
         """
-        print('\n ModalityDataset Class')
+        print('\nModalityDataset Class')
         print('root_dir=', root_dir)
 
         self.root_dir = root_dir
-
+        print('In ModalityDataset')
         print('dir_suffix=  ', directory_suffix)
         self.directory_suffix = directory_suffix
         dirs = sorted(glob.glob(f'{root_dir}/*{directory_suffix}'))
-        # dd = [d.replace(root_dir, '') for d in dirs]
-        # dd = [d.replace(directory_suffix, '') for d in dd]
-        # # print('sorted directories = ', dd)
         print('the number of dates in the sorted directories = ', len(dirs))
         print('min  max times for sorted files in mod:', dirs[0].replace(root_dir, ''),
               dirs[-1].replace(root_dir, ''))
         dirs = self.__filter_dirs(dirs, start_date.date(), end_date.date())
-        # dd = [d.replace(root_dir, '') for d in dirs]
-        # dd = [d.replace(directory_suffix, '') for d in dd]
-        # # print('filtered dirs = ', dd)
         print('the number of dates in the filtered directories = ', len(dirs))
         self.cycles_dirs = self.__get_cycles_dirs(dirs, split_cycle, skip)
 

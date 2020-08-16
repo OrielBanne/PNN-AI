@@ -15,10 +15,8 @@ from datetime import timedelta, datetime, time
 import yaml
 
 
-def greyscale_to_RGB(image: torch.Tensor, add_channels_dim=False) -> torch.Tensor:
-    if add_channels_dim:
-        image = image.unsqueeze(-3)
-
+def greyscale_to_rgb(image: torch.Tensor):
+    image = image.unsqueeze(-3)
     dims = [-1] * len(image.shape)
     dims[-3] = 3
     return image.expand(*dims)
@@ -32,22 +30,19 @@ class Identity(nn.Module):
     def forward(x):
         return x
 
-    # INCEPTION V3
 
-
-class ImageFeatureExtractor(nn.Module):
+class ImageFeatureExtractor(nn.Module):  # INCEPTION V3
     def __init__(self):
         super().__init__()
-        ## Note - inception_V3 expects tensors with a size of Nx3x299x299, ensure this size!
-        #  So why are we using 229 on 229 images?
         self.inception = inception_v3(pretrained=True, transform_input=False, aux_logits=True)
         # pretrained      - if true, returns a model pre-trained on ImageNet.
         # progress        - if true, displays a progress bar of the download to stderr ## should try this
         # aux_logits      - if true, add an auxiliary branch that can improve training. default =True
-        # transform_input - if True, preprocesses the input according to the method with which it was trained on imageNet. default = False
+        # transform_input - if True, preprocesses the input according to the method with which
+        # it was trained on imageNet. default = False
 
         self.inception.fc = Identity()  # adding a last layer FC layer identity
-        self.inception.eval()  # evaluation mode - during testing we do not want dropout to take place - correct???
+        self.inception.eval()  # evaluation mode
 
         for p in self.inception.parameters():
             p.requires_grad = False  # here we freeze the pretrained inception model parameters
@@ -60,19 +55,23 @@ class ImageFeatureExtractor(nn.Module):
         """
         :param x: a batch of image sequences of either size (NxTxCxHxW) or the squeezed size (NxTxHxW)
         :return: a batch of feature vectors for each image of size (NxTx2048)
+        N is batch size N
+        T is Time, each image is 1 date_time point
+        C is channel
+        H - Height
+        W Width
         """
         # if the image is greyscale convert it to RGB
-        if (len(x.shape) < 5) or (len(x.shape) >= 5 and x.shape[-3] == 1):  # ??????
-            x = greyscale_to_RGB(x, add_channels_dim=len(x.shape) < 5)
+        if (len(x.shape) < 5) or (len(x.shape) >= 5 and x.shape[-3] == 1):
+            x = greyscale_to_rgb(x)
 
         # if we got a batch of sequences we have to calculate each sequence separately
-        N, T = x.shape[:2]
-        return self.inception(x.view(-1, *x.shape[2:])).view(N, T, -1)
+        # TODO: understand the reshape below
+        n, t = x.shape[:2]
+        return self.inception(x.view(-1, *x.shape[2:])).view(n, t, -1)
 
-    # Temporal Convolutional Net
 
-
-class ModalityFeatureExtractor(nn.Module):
+class ModalityFeatureExtractor(nn.Module):  # Temporal Convolutional Net
     def __init__(self, num_levels: int = 3, num_hidden: int = 64, embedding_size: int = 128, kernel_size=2,
                  dropout=0.2):
         """
@@ -140,33 +139,33 @@ class PlantFeatureExtractor(nn.Module):
             self.add_module(f'TCN_{mod}_feat_extractor', self.mod_extractors[mod])
 
         # final feature extractor - linear FC
-        D_in = 128 * len(self.mods)  # Exp0: 128* 5 mods = 640//Exp2: 128*6 mods = 768
-        D_out = embedding_size  # 512
-        H = int((D_in + D_out) / 2)  # 640
+        d_in = 128 * len(self.mods)  # Exp0: 128* 5 mods = 640//Exp2: 128*6 mods = 768
+        d_out = embedding_size  # 512
+        h = int((d_in + d_out) / 2)  # 640
 
-        print('D_in  = ', D_in, 'D_out  = ', D_out, ' H = ', H)
-        self.final_feat_extractor = nn.Linear(D_in, D_out)  # previous layer
+        print('D_in  = ', d_in, 'D_out  = ', d_out, ' H = ', h)
+        self.final_feat_extractor = nn.Linear(d_in, d_out)  # FC Linear last layer
 
         # This is yet without convolution, but has 2 layers and ReLU activation - might improve
         # self.final_feat_extractor = torch.nn.Sequential(
-        #    torch.nn.Linear(D_in, H),
+        #    torch.nn.Linear(d_in, h),
         #    torch.nn.ReLU(),
-        #    torch.nn.Linear(H, D_out),
+        #    torch.nn.Linear(h, d_out),
         # )
 
         # Expected 3-dimensional input for 3-dimensional weight [640, 768, 1], but got 2-dimensional input
         # of size [4, 768] instead
-        # D_in  =  768 D_out  =  512  H =  640  batch_size = 4
-        # input size was [4, 768]  = [batch_size, D_in] # I checked it is batch size
+        # d_in  =  768 d_out  =  512  h =  640  batch_size = 4
+        # input size was [4, 768]  = [batch_size, d_in] # I checked it is batch size
         # Convolution added checking dimensions
         # self.final_feat_extractor = torch.nn.Sequential(
-        #    torch.nn.Conv1d(D_in, H, kernel_size = 1, stride=1, padding=0, dilation=1, groups=1, bias=True,
-        #    padding_mode='zeros'),
-        #    torch.nn.ReLU(),
-        #    torch.nn.Linear(H, D_out),
+        #     torch.nn.Conv1d(d_in, h, kernel_size=(3,), padding=(1,), padding_mode='zeros'),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Linear(h, d_out),
         # )
         '''
-        torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
+        torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True,
+         padding_mode='zeros')
         
         N is a batch size, C denotes a number of channels, L is a length of signal sequence.
         layer with input size (N,Cin,L) and output (N,Cout,Lout) 
@@ -183,12 +182,12 @@ class PlantFeatureExtractor(nn.Module):
         torch.nn.MaxPool2d(kernel_size, stride, padding) – applies max pooling
         torch.nn.Linear(in_features, out_features) – fully connected layer (multiply inputs by learned weights)
 
-        final layer D_in = 
+        final layer d_in = 
 
         model = torch.nn.Sequential(
-            torch.nn.Linear(D_in, H),
+            torch.nn.Linear(d_in, h),
             torch.nn.ReLU(),
-            torch.nn.Linear(H, D_out),
+            torch.nn.Linear(h, d_out),
         )
         
         '''
@@ -218,7 +217,7 @@ class PlantFeatureExtractor(nn.Module):
         :param x: input of type mod=x_mod for each modality where each x_mod is of shape
                     (NxT_modxC_modxH_modxW_mod),
                     where the batch size N is the same over all mods and others are mod-specific
-        :return: a feature vector of shape (Nxembedding_size)
+        :return: a feature vector of shape (N x embedding_size)
         """
         # make sure that all of the extractor mods and only them are used
         assert set(self.mods) == set(x.keys())
@@ -239,11 +238,16 @@ class PlantFeatureExtractor(nn.Module):
             mod_feats = {}
             for mod in self.mods:
                 with torch.cuda.stream(self.streams[mod]):
-                    mod_feats[mod] = self.mod_extractors[mod](img_feats[mod])  ######
+                    mod_feats[mod] = self.mod_extractors[mod](img_feats[mod])  #
             for mod in self.mods:
                 self.streams[mod].synchronize()
 
         # take the final feature vector from each sequence
         combined_features = torch.cat([mod_feats[mod][:, -1, :] for mod in self.mods], dim=1)
+        # print('Extracted tensors:')
+        # print()
+        # print([mod_feats[mod].size for mod in self.mods])  # Debug
+
+        # combined_features = torch.cat([mod_feats[mod] for mod in self.mods], dim=1)
 
         return self.final_feat_extractor(combined_features)

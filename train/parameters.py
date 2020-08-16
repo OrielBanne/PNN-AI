@@ -8,6 +8,8 @@
 import numpy as np
 from datasets import labels
 from datasets.experiments import experiments_info
+import datetime
+
 print('~~~~~~~~~~~~~IMPORT PARAMETERS~~~~~~~~~~~~~')
 
 # Default Parameters
@@ -29,14 +31,19 @@ load_checkpoint = False
 use_checkpoints = False
 
 start_date = experiments_info[experiment].start_date
-end_date = experiments_info[experiment].end_date
+# end_date = experiments_info[experiment].end_date
+end_date = start_date + datetime.timedelta(hours=3)
 
-print(start_date)
+# single plant random crop size for the different modalities:
+lwir_crop = 229
+color_crop = 229
+depth_crop = 229
+vir_crop = 458
 
 # Choose Device
 cdevice = "cuda:0"
 
-excluded_modalities = ['noFilter', 'polar', 'polar_a', '970nm', 'lwir', '577nm', '692nm', '732nm', 'color']  # 'depth'
+excluded_modalities = ['noFilter', 'polar', 'polar_a', '970nm', '577nm']  # , 'depth', '732nm', '692nm', 'lwir', 'color'
 
 excluded_plants = []
 test_plants = []
